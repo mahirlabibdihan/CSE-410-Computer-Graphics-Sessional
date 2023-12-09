@@ -39,50 +39,53 @@ struct PT
     PT operator-(PT b) { return PT(x - b.x, y - b.y, z - b.z); }
     PT operator*(double b) { return PT(x * b, y * b, z * b); }
     PT operator/(double b) { return PT(x / b, y / b, z / b); }
+    PT operator/(PT b) { return PT(x / b.x, y / b.y, z / b.y); }
     PT operator*(PT b) { return PT(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
 };
 
-vector<PT> generate_equilateral_polygon(double center_x, double center_y, double radius, int num_sides) {
-  vector<PT> vertices;
-  for (int i = 0; i < num_sides; ++i) {
-    double angle = (45*PI/180) + 2.0 * PI * i / num_sides;
-    double x = center_x + radius * cos(angle);
-    double y = center_y + radius * sin(angle);
-    vertices.push_back({x, y, 0});
-  }
-  return vertices;
+vector<PT> generate_equilateral_polygon(double center_x, double center_y, double radius, int num_sides)
+{
+    vector<PT> vertices;
+    for (int i = 0; i < num_sides; ++i)
+    {
+        double angle = (45 * PI / 180) + 2.0 * PI * i / num_sides;
+        double x = center_x + radius * cos(angle);
+        double y = center_y + radius * sin(angle);
+        vertices.push_back({x, y, 0});
+    }
+    return vertices;
 }
 
-int n = 5;
+int n = 4;
 vector<PT> vertex;
 // = {PT(6,6,0),PT(-6,6,0),PT(-6,-6,0),PT(6,-6,0)}
-bool ccw(PT A,PT B,PT C)
+bool ccw(PT A, PT B, PT C)
 {
-    return (C.y-A.y) * (B.x-A.x) > (B.y-A.y) * (C.x-A.x);
+    return (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
 }
 
-bool intersect(PT A,PT B,PT C,PT D)
+bool intersect(PT A, PT B, PT C, PT D)
 {
-    return ccw(A,C,D) != ccw(B,C,D) and ccw(A,B,C) != ccw(A,B,D);
+    return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D);
 }
 
 bool animate = false;
 
 PT minX(PT p, PT q)
 {
-    return p.x < q.x ? p:q;
+    return p.x < q.x ? p : q;
 }
 PT maxX(PT p, PT q)
 {
-    return p.x > q.x ? p:q;
+    return p.x > q.x ? p : q;
 }
 PT minY(PT p, PT q)
 {
-    return p.y < q.y ? p:q;
+    return p.y < q.y ? p : q;
 }
 PT maxY(PT p, PT q)
 {
-    return p.y > q.y ? p:q;
+    return p.y > q.y ? p : q;
 }
 
 void drawCheckerboard()
@@ -349,9 +352,9 @@ void drawSphereQuad(double radius, int slices, int stacks, double R, double G, d
 // position of camera
 PT pos(10, 10, 10);
 // up, right and look direction
-PT up(-1/sqrt(3), -1/sqrt(3), 1/sqrt(3));
-PT right(-1/sqrt(2), 1/sqrt(2), 0);
-PT look(-1/sqrt(3), -1/sqrt(3), -1/sqrt(3));
+PT up(-1 / sqrt(3), -1 / sqrt(3), 1 / sqrt(3));
+PT right(-1 / sqrt(2), 1 / sqrt(2), 0);
+PT look(-1 / sqrt(3), -1 / sqrt(3), -1 / sqrt(3));
 
 // PT pos(0, 0, 10);
 // // up, right and look direction
@@ -359,16 +362,15 @@ PT look(-1/sqrt(3), -1/sqrt(3), -1/sqrt(3));
 // PT right(0, -1, 0);
 // PT look(0, 0, -1);
 
-
 GLfloat ball_radius = 0.5;
-PT ball_look(1/sqrt(2),1/sqrt(2),0);
-PT ball_right(1/sqrt(2),-1/sqrt(2),0);
+PT ball_look(1 / sqrt(2), 1 / sqrt(2), 0);
+PT ball_right(1 / sqrt(2), -1 / sqrt(2), 0);
 // PT ball_look(1,0,0);
 // PT ball_right(0,-1,0);
-PT ball_up(0,0,1);
-PT ball_pos(0,0,ball_radius);
+PT ball_up(0, 0, 1);
+PT ball_pos(0, 0, ball_radius);
 
-
+bool predicted = false;
 void wall()
 {
     glBegin(GL_QUADS);
@@ -388,18 +390,13 @@ void fullwall()
     {
 
         glColor4f(1, 0, 0, 1);
-        for(int i=0;i<n;i++)
-        {   
+        for (int i = 0; i < n; i++)
+        {
             glVertex3f(vertex[i].x, vertex[i].y, 0.0);
-            glVertex3f(vertex[(i+1)%n].x, vertex[(i+1)%n].y, 0.0);
-            glVertex3f(vertex[(i+1)%n].x, vertex[(i+1)%n].y, 0.5);
+            glVertex3f(vertex[(i + 1) % n].x, vertex[(i + 1) % n].y, 0.0);
+            glVertex3f(vertex[(i + 1) % n].x, vertex[(i + 1) % n].y, 0.5);
             glVertex3f(vertex[i].x, vertex[i].y, 0.5);
         }
-
-        // for(int i=0;i<n;i++)
-        // {   
-        //     glVertex3f(vertex[i].x, vertex[i].y, 0.5);
-        // }
     }
     glEnd();
 }
@@ -506,7 +503,7 @@ void display()
     glLoadIdentity(); // Ensures that each time when we enter the projection mode, the matrix will be reset to identity matrix
     gluLookAt(pos.x, pos.y, pos.z,
               pos.x + look.x, pos.y + look.y, pos.z + look.z,
-                // ball_pos.x , ball_pos.y, ball_pos.z,
+              // ball_pos.x , ball_pos.y, ball_pos.z,
               up.x, up.y, up.z);
     // gluLookAt(
     //     -8, -8, 10,  // EYE: Location of camera
@@ -548,8 +545,6 @@ void display()
 
     double axis = dir_angle - 90;
 
-
-
     // for (int i = 0; i < 4; i++)
     {
         glPushMatrix();
@@ -574,8 +569,8 @@ void display()
     glPushMatrix();
     glTranslatef(ball_pos.x, ball_pos.y, ball_pos.z);
 
-    glRotatef(fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0), ball_up.x, ball_up.y, ball_up.z);
-    
+    glRotatef(fmod((atan2(ball_look.y, ball_look.x) * 180 / PI) + 360.0, 360.0), ball_up.x, ball_up.y, ball_up.z);
+
     glPushMatrix();
     // glTranslatef(0, 0, 0.5);
     glRotatef(90, 0, 1, 0);
@@ -589,7 +584,7 @@ void display()
 
     glPushMatrix();
     glTranslatef(ball_pos.x, ball_pos.y, ball_pos.z);
-    glRotatef(fmod((atan2(ball_right.y, ball_right.x)* 180 / PI)+360.0,360.0), ball_up.x, ball_up.y, ball_up.z);
+    glRotatef(fmod((atan2(ball_right.y, ball_right.x) * 180 / PI) + 360.0, 360.0), ball_up.x, ball_up.y, ball_up.z);
     glPushMatrix();
     // glTranslatef(0, 0, 0.5);
     glRotatef(90, 0, 1, 0);
@@ -651,143 +646,242 @@ void init()
     double center_y = 0.0;
     double radius = sqrt(72);
 
-  // Define the number of sides
+    // Define the number of sides
     // int num_sides = 5;
     vertex = generate_equilateral_polygon(center_x, center_y, radius, n);
 }
 
-
 double dot(PT a, PT b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-double printPT(PT a) { printf("(%lf,%lf,%lf)\n",a.x,a.y,a.z);}
+double printPT(PT a) { printf("(%lf,%lf,%lf)\n", a.x, a.y, a.z); }
 void rotate3D(PT &vec, PT &axis, double ang)
 {
-    vec = vec * cos(ang) + axis * (1-cos(ang)) * dot(axis, vec) + (axis * vec) * sin(ang);
+    vec = vec * cos(ang) + axis * (1 - cos(ang)) * dot(axis, vec) + (axis * vec) * sin(ang);
 }
 bool last_i = true;
 
 PT findIntersection(double x1, double y1, double x2, double y2,
-                        double x3, double y3, double x4, double y4) {
+                    double x3, double y3, double x4, double y4)
+{
     PT intersection;
 
-    double det = ((x1-x2) * (y3-y4)) - ((y1-y2) * (x3-x4));
+    double det = ((x1 - x2) * (y3 - y4)) - ((y1 - y2) * (x3 - x4));
 
-    if (std::abs(det) < 1e-9) {
+    if (std::abs(det) < 1e-9)
+    {
         // Lines are parallel or nearly parallel
         // std::cout << "Lines are parallel. No unique intersection point." << std::endl;
         intersection.x = NAN;
         intersection.y = NAN;
-    } else {
-        double t = ((x1-x3)*(y3-y4)-(y1-y3)*(x3-x4))/ det;
-        double u = ((x1-x3)*(y1-y2)-(y1-y3)*(x1-x2))/ det;
-        intersection.x = x3 + u * (x4-x3);
-        intersection.y = y3 + u * (y4-y3);
-
     }
-
+    else
+    {
+        double t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / det;
+        double u = ((x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2)) / det;
+        intersection.x = x3 + u * (x4 - x3);
+        intersection.y = y3 + u * (y4 - y3);
+    }
 
     return intersection;
 }
 
-
-void handleCollision()
+double distancePointToLine(double x0, double y0, double x1, double y1, double x2, double y2)
 {
-    printf("==============================Collision=================================\n");
-    // int n = 4;
-    for(int i=0;i<n;i++)
-    {
-        PT A = vertex[i];
-        PT B = vertex[(i+1)%n];
-        PT C = ball_pos;
-        PT D = ball_pos + (ball_look * 100);
-        if(intersect(A,B,C,D))
-        {
-            printf("Collusion at wall %d\n",i);
-            PT X = findIntersection(A.x,A.y,B.x,B.y,C.x,C.y,D.x,D.y);
-        
-            printPT(X);
-            //  printPT(findIntersection(-1,0,1,0,0.5,-1,0.5,1));
-            printPT(ball_pos);
-            printf("x_dist: %lf, y_dist: %lf\n\n", X.x - ball_pos.x,  X.y - ball_pos.y);
-            PT direction_vector = A - B;
-            PT orthogonal_direction_vector = PT(-direction_vector.y,direction_vector.x,0);
-            orthogonal_direction_vector = orthogonal_direction_vector/sqrt(dot(orthogonal_direction_vector,orthogonal_direction_vector));
-            // float m1 = (B.y-A.y)/(B.x-A.x);
-
-            ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look,orthogonal_direction_vector);
-            ball_right = PT(ball_look.y,-ball_look.x,0); // Orthogonal
-            break;
-        }
-    }
-    printf("==============================Collision=================================\n");
-}
-
-double distancePointToLine(double x0, double y0, double x1, double y1, double x2, double y2) {
     double numerator = std::abs((y2 - y1) * x0 - (x2 - x1) * y0 + x2 * y1 - y2 * x1);
     double denominator = std::sqrt(std::pow(y2 - y1, 2) + std::pow(x2 - x1, 2));
-
     return numerator / denominator;
 }
 
+void handleCollision()
+{
+    // printf("==============================Collision=================================\n");
+    // int n = 4;
+    for (int i = 0; i < n; i++)
+    {
+        PT A = vertex[i];
+        PT B = vertex[(i + 1) % n];
+        PT C = ball_pos;
+        PT D = ball_pos + (ball_look * 100);
+        if (intersect(A, B, C, D))
+        {
+            // printf("Collusion at wall %d\n",i);
+            PT X = findIntersection(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+
+            printPT(X);
+            //  printPT(findIntersection(-1,0,1,0,0.5,-1,0.5,1));
+            printPT(ball_pos);
+            // printf("x_dist: %lf, y_dist: %lf\n\n", X.x - ball_pos.x,  X.y - ball_pos.y);
+            PT direction_vector = A - B;
+            PT orthogonal_direction_vector = PT(-direction_vector.y, direction_vector.x, 0);
+            orthogonal_direction_vector = orthogonal_direction_vector / sqrt(dot(orthogonal_direction_vector, orthogonal_direction_vector));
+            ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look, orthogonal_direction_vector);
+            ball_right = PT(ball_look.y, -ball_look.x, 0); // Orthogonal
+            break;
+        }
+    }
+    // printf("==============================Collision=================================\n");
+}
+
+PT next_ball_look, next_ball_right;
+void predictCollision()
+{
+    // printf("==============================Collision=================================\n");
+    // int n = 4;
+    for (int i = 0; i < n; i++)
+    {
+        PT A = vertex[i];
+        PT B = vertex[(i + 1) % n];
+        PT C = ball_pos;
+        PT D = ball_pos + (ball_look * 100);
+        if (intersect(A, B, C, D))
+        {
+            PT direction_vector = A - B;
+            PT orthogonal_direction_vector = PT(-direction_vector.y, direction_vector.x, 0);
+            orthogonal_direction_vector = orthogonal_direction_vector / sqrt(dot(orthogonal_direction_vector, orthogonal_direction_vector));
+            next_ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look, orthogonal_direction_vector);
+            next_ball_right = PT(next_ball_look.y, -next_ball_look.x, 0); // Orthogonal
+            break;
+        }
+    }
+}
+
+double det2D(PT v)
+{
+    return sqrt(v.x * v.x + v.y * v.y);
+}
+
+double distancePointToPoint(PT a, PT b)
+{
+    return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
+}
+double getListDistance()
+{
+    double dist = INT64_MAX;
+    for (int i = 0; i < n; i++)
+    {
+        PT A = vertex[i];
+        PT B = vertex[(i + 1) % n];
+        PT C = ball_pos;
+        PT D = ball_pos + (ball_look * 100);
+        if (intersect(A, B, C, D))
+        {
+            // printf("Collusion at wall %d\n", i);
+            PT dir = B - A;
+            double theta = acos(dot(dir, ball_look) / (det2D(dir) * det2D(ball_look)));
+
+            printf("Theta: %lf\n", theta * 180 / PI);
+
+            PT I = findIntersection(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+            double distance = distancePointToPoint(C, I);
+            double minus = ball_radius / sin(theta);
+            dist = min(dist, distance - minus);
+            printf("Dist: %lf\n", dist);
+        }
+    }
+    return dist;
+}
+
+int getCollidedWall()
+{
+    for (int i = 0; i < n; i++)
+    {
+        PT A = vertex[i];
+        PT B = vertex[(i + 1) % n];
+        PT C = ball_pos;
+        PT D = ball_pos + (ball_look * 100);
+        if (intersect(A, B, C, D))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+bool checkCollision()
+{
+    for (int i = 0; i < n; i++)
+    {
+        PT A = vertex[i];
+        PT B = vertex[(i + 1) % n];
+        PT C = ball_pos;
+        PT D = ball_pos + (ball_look * 100);
+        if (intersect(A, B, C, D))
+        {
+            // printf("Collusion at wall %d\n", i);
+            PT dir = B - A;
+
+            PT P = C - A;
+            double projection = (P.x * dir.x + P.y * dir.y) / (P.x * P.x + dir.y * dir.y);
+            double distance_x = P.x - projection * dir.x;
+            double distance_y = P.y - projection * dir.y;
+            double distance = sqrt(distance_x * distance_x + distance_y * distance_y);
+
+            distance = distancePointToLine(C.x, C.y, A.x, A.y, B.x, B.y);
+            // printf("Distance: %lf\n\n", distance);
+            if (distance <= ball_radius)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+int counter = 0;
 void update(int time)
 {
     angle = (angle + 1) % 360;
-
-    if(animate)
+    counter += time;
+    // printf("Time: %d, Counter: %d\n", time, counter);
+    if (animate)
     {
-        ball_pos = ball_pos + (ball_look * 0.05);
-        ball_rot_right -= 5;
-        // if (fabs(ball_pos.x) > 5.5)
+        ball_pos = ball_pos + (ball_look * 0.25);
+        ball_rot_right -= 25;
+        // if (checkCollision())
         // {
-        //     ball_look.x = -ball_look.x;
-        //     ball_right.y = -ball_right.y;
+        //     // handleCollision();
         // }
-        // else if (fabs(ball_pos.y) > 5.5)
-        // {
-        //     ball_look.y = -ball_look.y;
-        //     ball_right.x = -ball_right.x;
-        // }
-        // ball_pos = minX(maxX(ball_pos, PT(-5.5,ball_pos.y,ball_pos.z)), PT(5.5,ball_pos.y,ball_pos.z));
-        // ball_pos = minY(maxY(ball_pos, PT(ball_pos.x,-5.5,ball_pos.z)), PT(ball_pos.x,5.5,ball_pos.z));
-
-
-        for(int i=0;i<n;i++)
-        {
-            PT A = vertex[i];
-            PT B = vertex[(i+1)%n];
-            PT C = ball_pos;
-            PT D = ball_pos + (ball_look * 100);
-            if(intersect(A,B,C,D))
-            {
-                // prin
-                printf("Collusion at wall %d\n",i);
-                PT dir = B - A;
-
-                PT P = C - A;
-                double projection = (P.x * dir.x + P.y * dir.y) / (P.x * P.x + dir.y * dir.y);
-                double distance_x = P.x - projection * dir.x;
-                double distance_y = P.y - projection * dir.y;
-                double distance = sqrt(distance_x * distance_x + distance_y * distance_y);
-                
-                distance = distancePointToLine(C.x,C.y, A.x,A.y,B.x,B.y);
-                printf("Distance: %lf\n\n",distance);
-                if(distance<=ball_radius)
-                {
-                    handleCollision();
-                    break;
-                }
-            }
-        }
-        
     }
-
 
     glutPostRedisplay();
     glutTimerFunc(time, update, time);
 }
 
+int current_id = 0;
+
+void collision(int id)
+{
+    // printf("Callback\n");
+    int time = 10;
+    if (animate)
+    {
+        if (predicted)
+        {
+            // handleCollision();
+            ball_look = next_ball_look;
+            ball_right = next_ball_right;
+        }
+        else
+        {
+            current_id++;
+            id = current_id;
+        }
+        predictCollision();
+        time = getListDistance() / (det2D(ball_look) * 0.25 / 100);
+
+        // printf("Wall: %d\n, Look: ", wall);
+        // printPT(ball_look);
+        counter = 0;
+        predicted = true;
+    }
+    // printf("Callback at %d, id: %d\n", time, id);
+    glutPostRedisplay();
+    glutTimerFunc(time, collision, time);
+}
+
+bool key_state[128];
 void key(unsigned char key, int, int)
 {
     // if (key == 27) glutLeaveMainLoop();
+
     if (key == 'a')
         if (stacks > 0)
             stacks -= 1;
@@ -835,177 +929,27 @@ void key(unsigned char key, int, int)
 
     case 'w':
     case 'i':
-        ball_r += 0.1;
-
-        
-        // if (!last_i)
-        // {
-        //     // dir_angle = (180 + dir_angle) % 360;
-
-        //     rotate3D(ball_right, ball_up, 180 * ROT_ANG);
-        //     rotate3D(ball_look, ball_up, 180 * ROT_ANG);
-
-        //     printf("%lf %lf %lf\n",ball_look.x, ball_look.y, fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0));
-            
-        //     last_i = true;
-        // }
-        // else 
+        if (!animate)
         {
-            ball_rot = ball_rot + 5.0;
-
             ball_rot_right -= 10;
-            ball_rot_x = -cos((dir_angle - 90) * PI / 180);
-            ball_rot_y = -sin((dir_angle - 90) * PI / 180);
-            ball_x += 0.1 * cos(dir_angle * PI / 180);
-            ball_y += 0.1 * sin(dir_angle * PI / 180);
-
             ball_pos = ball_pos + (ball_look * 0.1);
-
-            // if (fabs(ball_pos.x) >= 5.5)
-            // {
-            //     // printf("x right\n");
-            //     // dir_angle = dir_angle - 180;
-            //     // dir_angle = 360 - dir_angle;
-
-            //     // ball_look.x = -ball_look.x;
-            //     // ball_right.y = -ball_right.y;
-            //   handleCollision();
-
-            // }
-            // // else if (ball_pos < -5.5)
-            // // {
-            // //     printf("x left\n");
-            // //     dir_angle = dir_angle - 180;
-            // //     dir_angle = 360 - dir_angle;
-            // // }
-            // else if (fabs(ball_pos.y) >= 5.5)
-            // {
-            //     // printf("y right\n");
-            //     // dir_angle = 360 - dir_angle;
-
-            //     // ball_look.y = -ball_look.y;
-            //     // ball_right.x = -ball_right.x;
-            //    handleCollision();
-
-            // }
-            // else if (ball_y < -5.5)
-            // {
-            //     printf("y left\n");
-            //     dir_angle = 360 - dir_angle;
-            //     // dir_angle = 180 - dir_angle;
-            // }
-
-
+            if (checkCollision())
+            {
+                handleCollision();
+            }
         }
-        // {
-        //     // int n = 4;
-        //     for(int i=0;i<n;i++)
-        //     {
-        //         PT A = vertex[i];
-        //         PT B = vertex[(i+1)%n];
-        //         PT C = ball_pos;
-        //         PT D = ball_pos + (ball_look * 100);
-        //         if(intersect(A,B,C,D))
-        //         {
-        //             printf("Collusion at wall %d\n",i);
-        //             PT X = findIntersection(A.x,A.y,B.x,B.y,C.x,C.y,D.x,D.y);
-        //             printPT(X);
-        //             //  printPT(findIntersection(-1,0,1,0,0.5,-1,0.5,1));
-        //             printPT(ball_pos);
-        //             printf("x_dist: %lf, y_dist: %lf\n\n", X.x - ball_pos.x,  X.y - ball_pos.y);
-        //             // PT direction_vector = A - B;
-        //             // PT orthogonal_direction_vector = PT(-direction_vector.y,direction_vector.x,0);
-        //             // orthogonal_direction_vector = orthogonal_direction_vector/sqrt(pow(orthogonal_direction_vector.x,2)+pow(orthogonal_direction_vector.y,2));
-        //             // // float m1 = (B.y-A.y)/(B.x-A.x);
-
-        //             // ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look,orthogonal_direction_vector);
-        //         }
-        //     }
-        // }
-
-
         break;
 
     case 's':
     case 'k':
-        ball_r += 0.1;
-        // if (last_i)
-        // {
-        //     dir_angle = (180 + dir_angle) % 360;
-
-        //     rotate3D(ball_right, ball_up, 180 * ROT_ANG);
-        //     rotate3D(ball_look, ball_up, 180 * ROT_ANG);
-
-        //     printf("%lf %lf %lf\n",ball_look.x, ball_look.y, fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0));
-        //     last_i = false;
-        // }
-        // else
+        if (!animate)
         {
             ball_rot_right += 10;
-            // ball_rot = ball_rot - 5.0;
-            // ball_rot_x = cos((dir_angle - 90) * PI / 180);
-            // ball_rot_y = sin((dir_angle - 90) * PI / 180);
-            // ball_x += 0.1 * cos(dir_angle * PI / 180);
-            // ball_y += 0.1 * sin(dir_angle * PI / 180);
             ball_pos = ball_pos - (ball_look * 0.1);
-
-//             if (fabs(ball_pos.x) >= 5.5)
-//             {
-//                 // printf("x right\n");
-//                 // dir_angle = dir_angle - 180;
-//                 // dir_angle = 360 - dir_angle;
-
-//                 // ball_look.x = -ball_look.x;
-//                 // ball_right.y = -ball_right.y;
-//  handleCollision();
-
-
-//             }
-//             // else if (ball_pos < -5.5)
-//             // {
-//             //     printf("x left\n");
-//             //     dir_angle = dir_angle - 180;
-//             //     dir_angle = 360 - dir_angle;
-//             // }
-//             else if (fabs(ball_pos.y) >= 5.5)
-//             {
-//                 // printf("y right\n");
-//                 // dir_angle = 360 - dir_angle;
-
-//                 // ball_look.y = -ball_look.y;
-//                 // ball_right.x = -ball_right.x;
-
-//                handleCollision();
-
-
-//             }
-
-            // if (ball_x > 5.5)
-            // {
-            //     printf("x right\n");
-            //     dir_angle = dir_angle - 180;
-            //     dir_angle = 360 - dir_angle;
-            // }
-            // else if (ball_x < -5.5)
-            // {
-            //     printf("x left\n");
-            //     dir_angle = dir_angle - 180;
-            //     dir_angle = 360 - dir_angle;
-            // }
-            // else if (ball_y > 5.5)
-            // {
-            //     printf("y right\n");
-            //     dir_angle = 360 - dir_angle;
-            // }
-            // else if (ball_y < -5.5)
-            // {
-            //     printf("y left\n");
-            //     dir_angle = 360 - dir_angle;
-            //     // dir_angle = 180 - dir_angle;
-            // }
-
-            // ball_x = MIN(MAX(ball_x, -5.5), 5.5);
-            // ball_y = MIN(MAX(ball_y, -5.5), 5.5);
+            if (checkCollision())
+            {
+                handleCollision();
+            }
         }
         break;
 
@@ -1016,7 +960,8 @@ void key(unsigned char key, int, int)
 
         rotate3D(ball_right, ball_up, ROT_ANG);
         rotate3D(ball_look, ball_up, ROT_ANG);
-
+        predicted = false;
+        getListDistance();
         // printf("%lf %lf\n",atan(ball_look.y / ball_look.x), fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0));
         break;
 
@@ -1027,37 +972,44 @@ void key(unsigned char key, int, int)
 
         rotate3D(ball_right, ball_up, -ROT_ANG);
         rotate3D(ball_look, ball_up, -ROT_ANG);
+        predicted = false;
+        getListDistance();
         // printf("%lf %lf\n",atan(ball_look.y / ball_look.x), fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0));
         break;
     case ' ':
         animate = !animate;
+        if (animate)
+        {
+            predicted = false;
+        }
         break;
 
     case '0':
         n++;
         ball_pos.x = 0;
         ball_pos.y = 0;
-        {
-            double center_x = 0.0;
-    double center_y = 0.0;
-    double radius = sqrt(72);
-
-  // Define the number of sides
-    // int num_sides = 5;
-    vertex = generate_equilateral_polygon(center_x, center_y, radius, n);
-        break;
-
-        }
-    case '9':
-        n = max(3,n-1);
-        ball_pos.x = 0;
-        ball_pos.y = 0;
+        predicted = false;
         {
             double center_x = 0.0;
             double center_y = 0.0;
-           double radius = sqrt(72);
+            double radius = sqrt(72);
 
-        // Define the number of sides
+            // Define the number of sides
+            // int num_sides = 5;
+            vertex = generate_equilateral_polygon(center_x, center_y, radius, n);
+            break;
+        }
+    case '9':
+        n = max(3, n - 1);
+        ball_pos.x = 0;
+        ball_pos.y = 0;
+        predicted = false;
+        {
+            double center_x = 0.0;
+            double center_y = 0.0;
+            double radius = sqrt(72);
+
+            // Define the number of sides
             // int num_sides = 5;
             vertex = generate_equilateral_polygon(center_x, center_y, radius, n);
         }
@@ -1065,37 +1017,9 @@ void key(unsigned char key, int, int)
         break;
     }
 
-    for(int i=0;i<n;i++)
-    {
-        PT A = vertex[i];
-        PT B = vertex[(i+1)%n];
-        PT C = ball_pos;
-        PT D = ball_pos + (ball_look * 100);
-        if(intersect(A,B,C,D))
-        {
-            // prin
-            printf("Collusion at wall %d\n",i);
-            PT dir = B - A;
-
-            PT P = C - A;
-            double projection = (P.x * dir.x + P.y * dir.y) / (P.x * P.x + dir.y * dir.y);
-            double distance_x = P.x - projection * dir.x;
-            double distance_y = P.y - projection * dir.y;
-            double distance = sqrt(distance_x * distance_x + distance_y * distance_y);
-            
-            distance = distancePointToLine(C.x,C.y, A.x,A.y,B.x,B.y);
-            printf("Distance: %lf\n\n",distance);
-            if(distance<=ball_radius)
-            {
-                handleCollision();
-                break;
-            }
-        }
-    }
-
     // ball_pos = minX(maxX(ball_pos, PT(-5.5,ball_pos.y,ball_pos.z)), PT(5.5,ball_pos.y,ball_pos.z));
     // ball_pos = minY(maxY(ball_pos, PT(ball_pos.x,-5.5,ball_pos.z)), PT(ball_pos.x,5.5,ball_pos.z));
-    
+
     glutPostRedisplay();
 }
 
@@ -1193,11 +1117,11 @@ int main(int argc, char **argv)
     glutKeyboardFunc(key);
     glutSpecialFunc(specialkey); // special keys
     glutMouseFunc(mouseClick);
-    glutMotionFunc(mouseDrag);
-    glutPassiveMotionFunc(mouseMove);
+    // glutMotionFunc(mouseDrag);
+    // glutPassiveMotionFunc(mouseMove);
     glutMouseWheelFunc(mouseScroll);
-
-    glutTimerFunc(10, update, 10);
+    glutTimerFunc(100, update, 100);
+    glutTimerFunc(10, collision, 0);
     // glMatrixMode(GL_MODELVIEW);
 
     glMatrixMode(GL_PROJECTION);
@@ -1224,7 +1148,7 @@ int main(int argc, char **argv)
 
     // glEnable(GL_COLOR_MATERIAL);
     // glEnable(GL_LIGHTING);
-    // glEnable(GL_LIGHT0);
+    // glEnable(GL_LIGHT0);ez
     // glEnable(GL_DEPTH_TEST);
     // glEnable(GL_LINE_SMOOTH);
 

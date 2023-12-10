@@ -208,42 +208,94 @@ void circle(int x, int y, int r)
     glEnd();
 }
 
-void drawSphere(double radius, int slices, int stacks)
+double dot(PT a, PT b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+double dot2D(PT a, PT b) { return a.x * b.x + a.y * b.y; }
+double printPT(PT a) { printf("(%lf,%lf,%lf)\n", a.x, a.y, a.z); }
+void rotate3D(PT &vec, PT &axis, double ang)
 {
-    struct PT points[100][100];
+    vec = vec * cos(ang) + axis * (1 - cos(ang)) * dot(axis, vec) + (axis * vec) * sin(ang);
+}
+bool last_i = true;
+
+// position of camera
+PT pos(10, 10, 10);
+// up, right and look direction
+PT up(-1 / sqrt(3), -1 / sqrt(3), 1 / sqrt(3));
+PT right(-1 / sqrt(2), 1 / sqrt(2), 0);
+PT look(-1 / sqrt(3), -1 / sqrt(3), -1 / sqrt(3));
+
+// PT pos(0, 0, 10);
+// // up, right and look direction
+// PT up(1, 0, 0);
+// PT right(0, -1, 0);
+// PT look(0, 0, -1);
+
+GLfloat ball_radius = 0.5;
+PT ball_look(1 / sqrt(2), 1 / sqrt(2), 0);
+PT ball_right(1 / sqrt(2), -1 / sqrt(2), 0);
+// PT ball_look(1,0,0);
+// PT ball_right(0,-1,0);
+PT ball_up(0, 0, 1);
+PT ball_pos(0, 0, ball_radius);
+
+struct PT points[100][100];
+struct PT lower_points[100][100];
+void initBall(double radius, int slices, int stacks)
+{
     int i, j;
     double h, r;
-    // generate points
     for (i = 0; i <= stacks; i++)
     {
         h = radius * sin(((double)i / (double)stacks) * (PI / 2));
         r = radius * cos(((double)i / (double)stacks) * (PI / 2));
         for (j = 0; j <= slices; j++)
         {
-            points[i][j].x = r * cos(((double)j / (double)slices) * 2 * PI);
-            points[i][j].y = r * sin(((double)j / (double)slices) * 2 * PI);
+            lower_points[i][j].x = points[i][j].x = r * cos(((double)j / (double)slices) * 2 * PI);
+            lower_points[i][j].y = points[i][j].y = r * sin(((double)j / (double)slices) * 2 * PI);
             points[i][j].z = h;
+            lower_points[i][j].z = -h;
         }
     }
+}
+void updateBall(double ang, int slices, int stacks)
+{
+    int i, j;
+    for (i = 0; i <= stacks; i++)
+    {
+        for (j = 0; j <= slices; j++)
+        {
+            rotate3D(points[i][j], ball_right, ang * ROT_ANG);
+            rotate3D(lower_points[i][j], ball_right, ang * ROT_ANG);
+        }
+    }
+}
+
+void drawSphere(double radius, int slices, int stacks)
+{
+    int i, j;
+    double h, r;
+    // generate points
+
     // draw quads using generated points
     for (i = 0; i < stacks; i++)
     {
-        glColor3f(0.5 + (double)i / (double)stacks, (double)i / (double)stacks, (double)i / (double)stacks);
-        // glColor3f(1,1,1);
         for (j = 0; j < slices; j++)
         {
             glBegin(GL_QUADS);
             {
                 // upper hemisphere
+                glColor3f(j % 2, (j + 1) % 2, 0);
                 glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
                 glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
                 glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
                 glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
+
                 // lower hemisphere
-                glVertex3f(points[i][j].x, points[i][j].y, -points[i][j].z);
-                glVertex3f(points[i][j + 1].x, points[i][j + 1].y, -points[i][j + 1].z);
-                glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, -points[i + 1][j + 1].z);
-                glVertex3f(points[i + 1][j].x, points[i + 1][j].y, -points[i + 1][j].z);
+                glColor3f((j + 1) % 2, j % 2, 0);
+                glVertex3f(lower_points[i][j].x, lower_points[i][j].y, lower_points[i][j].z);
+                glVertex3f(lower_points[i][j + 1].x, lower_points[i][j + 1].y, lower_points[i][j + 1].z);
+                glVertex3f(lower_points[i + 1][j + 1].x, lower_points[i + 1][j + 1].y, lower_points[i + 1][j + 1].z);
+                glVertex3f(lower_points[i + 1][j].x, lower_points[i + 1][j].y, lower_points[i + 1][j].z);
             }
             glEnd();
         }
@@ -306,69 +358,49 @@ void sphere()
     glPopMatrix();
 }
 
-void drawSphereQuad(double radius, int slices, int stacks, double R, double G, double B)
-{
-    struct PT points[100][100];
-    int i, j;
-    double h, r;
-    // generate points
-    GLfloat a, da = 2 * PI / stacks;
-    for (i = 0; i <= stacks; i++)
-    {
-        h = radius * sin(((double)i / stacks) * (PI / 2));
-        r = radius * cos(((double)i / stacks) * (PI / 2));
-        for (j = 0; j < 6; j++)
-        {
-            points[i][j].x = r * cos(((double)j / (double)slices) * 2 * PI);
-            points[i][j].y = r * sin(((double)j / (double)slices) * 2 * PI);
-            points[i][j].z = h;
-        }
-    }
-    // draw quads using generated points
-    for (i = 0; i < stacks; i++)
-    {
-        // glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
-        glColor3f(R, G, B);
-        for (j = 0; j < 5; j++)
-        {
-            glBegin(GL_QUADS);
-            {
-                // upper hemisphere
-                glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
-                glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
-                glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
-                glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
-                // //lower hemisphere
-                // glVertex3f(points[i][j].x,points[i][j].y,-points[i][j].z);
-                // glVertex3f(points[i][j+1].x,points[i][j+1].y,-points[i][j+1].z);
-                // glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,-points[i+1][j+1].z);
-                // glVertex3f(points[i+1][j].x,points[i+1][j].y,-points[i+1][j].z);
-            }
-            glEnd();
-        }
-    }
-}
+// void drawSphereQuad(double radius, int slices, int stacks, double R, double G, double B)
+// {
+//     struct PT points[100][100];
+//     int i, j;
+//     double h, r;
+//     // generate points
+//     GLfloat a, da = 2 * PI / stacks;
+//     for (i = 0; i <= stacks; i++)
+//     {
+//         h = radius * sin(((double)i / stacks) * (PI / 2));
+//         r = radius * cos(((double)i / stacks) * (PI / 2));
+//         for (j = 0; j < 2; j++)
+//         {
+//             points[i][j].x = r * cos(((double)j / (double)slices) * 2 * PI);
+//             points[i][j].y = r * sin(((double)j / (double)slices) * 2 * PI);
+//             points[i][j].z = h;
+//         }
+//     }
 
-// position of camera
-PT pos(10, 10, 10);
-// up, right and look direction
-PT up(-1 / sqrt(3), -1 / sqrt(3), 1 / sqrt(3));
-PT right(-1 / sqrt(2), 1 / sqrt(2), 0);
-PT look(-1 / sqrt(3), -1 / sqrt(3), -1 / sqrt(3));
-
-// PT pos(0, 0, 10);
-// // up, right and look direction
-// PT up(1, 0, 0);
-// PT right(0, -1, 0);
-// PT look(0, 0, -1);
-
-GLfloat ball_radius = 0.5;
-PT ball_look(1 / sqrt(2), 1 / sqrt(2), 0);
-PT ball_right(1 / sqrt(2), -1 / sqrt(2), 0);
-// PT ball_look(1,0,0);
-// PT ball_right(0,-1,0);
-PT ball_up(0, 0, 1);
-PT ball_pos(0, 0, ball_radius);
+//     // draw quads using generated points
+//     for (i = 0; i < stacks; i++)
+//     {
+//         // glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
+//         glColor3f(R, G, B);
+//         for (j = 0; j < 1; j++)
+//         {
+//             glBegin(GL_QUADS);
+//             {
+//                 // upper hemisphere
+//                 glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
+//                 glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
+//                 glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
+//                 glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
+//                 // //lower hemisphere
+//                 // glVertex3f(points[i][j].x,points[i][j].y,-points[i][j].z);
+//                 // glVertex3f(points[i][j+1].x,points[i][j+1].y,-points[i][j+1].z);
+//                 // glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,-points[i+1][j+1].z);
+//                 // glVertex3f(points[i+1][j].x,points[i+1][j].y,-points[i+1][j].z);
+//             }
+//             glEnd();
+//         }
+//     }
+// }
 
 bool predicted = false;
 void wall()
@@ -400,50 +432,50 @@ void fullwall()
     }
     glEnd();
 }
-void ball()
-{
-    // glPushMatrix();
-    // glTranslatef(0 , 0, 0.5);
-    glPushMatrix();
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glPopMatrix();
+// void ball()
+// {
+//     // glPushMatrix();
+//     // glTranslatef(0 , 0, 0.5);
+//     glPushMatrix();
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glPopMatrix();
 
-    glPushMatrix();
-    glRotatef(180, 1, 0, 0);
-    glPushMatrix();
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 1, 0, 0);
-    glRotatef(45, 0, 0, 1);
-    drawSphereQuad(0.5, 41, 40, 0, 1, 0);
-    glPopMatrix();
-    glPopMatrix();
-    // glPopMatrix();
-}
+//     glPushMatrix();
+//     glRotatef(180, 1, 0, 0);
+//     glPushMatrix();
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 1, 0, 0);
+//     glRotatef(45, 0, 0, 1);
+//     drawSphereQuad(0.5, 8, 40, 0, 1, 0);
+//     glPopMatrix();
+//     glPopMatrix();
+//     // glPopMatrix();
+// }
 
 double ball_r = 0;
 void drawArrow()
@@ -560,8 +592,9 @@ void display()
     // glPushMatrix();
     glTranslatef(ball_pos.x, ball_pos.y, ball_pos.z);
     // glRotatef(fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0), ball_up.x, ball_up.y, ball_up.z);
-    glRotatef(ball_rot_right, ball_right.x, ball_right.y, ball_right.z);
-    ball();
+    // glRotatef(ball_rot_right, ball_right.x, ball_right.y, ball_right.z);
+    // ball();
+    drawSphere(0.5, 8, 40);
     // glPopMatrix();
     glPopMatrix();
 
@@ -646,21 +679,39 @@ void init()
     double center_y = 0.0;
     double radius = sqrt(72);
 
+    initBall(0.5, 8, 40);
     // Define the number of sides
     // int num_sides = 5;
     vertex = generate_equilateral_polygon(center_x, center_y, radius, n);
 }
 
-double dot(PT a, PT b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-double printPT(PT a) { printf("(%lf,%lf,%lf)\n", a.x, a.y, a.z); }
-void rotate3D(PT &vec, PT &axis, double ang)
-{
-    vec = vec * cos(ang) + axis * (1 - cos(ang)) * dot(axis, vec) + (axis * vec) * sin(ang);
-}
-bool last_i = true;
+// PT findIntersection(double x1, double y1, double x2, double y2,
+//                     double x3, double y3, double x4, double y4)
+// {
+//     PT intersection;
 
-PT findIntersection(double x1, double y1, double x2, double y2,
-                    double x3, double y3, double x4, double y4)
+//     double det = ((x1 - x2) * (y3 - y4)) - ((y1 - y2) * (x3 - x4));
+
+//     if (std::abs(det) < 1e-9)
+//     {
+//         // Lines are parallel or nearly parallel
+//         // std::cout << "Lines are parallel. No unique intersection point." << std::endl;
+//         intersection.x = NAN;
+//         intersection.y = NAN;
+//     }
+//     else
+//     {
+//         double t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / det;
+//         double u = ((x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2)) / det;
+//         intersection.x = x3 + u * (x4 - x3);
+//         intersection.y = y3 + u * (y4 - y3);
+//     }
+
+//     return intersection;
+// }
+
+PT findIntersectionInf(double x1, double y1, double x2, double y2,
+                       double x3, double y3, double x4, double y4)
 {
     PT intersection;
 
@@ -675,10 +726,8 @@ PT findIntersection(double x1, double y1, double x2, double y2,
     }
     else
     {
-        double t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / det;
-        double u = ((x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2)) / det;
-        intersection.x = x3 + u * (x4 - x3);
-        intersection.y = y3 + u * (y4 - y3);
+        intersection.x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / det;
+        intersection.y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / det;
     }
 
     return intersection;
@@ -691,31 +740,143 @@ double distancePointToLine(double x0, double y0, double x1, double y1, double x2
     return numerator / denominator;
 }
 
-void handleCollision()
+double det2D(PT v)
+{
+    return sqrt(v.x * v.x + v.y * v.y);
+}
+
+double distancePointToPoint(PT a, PT b)
+{
+    return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
+}
+
+// double getNearestWall()
+// {
+//     double dist = INT64_MAX;
+//     int idx = -1;
+//     for (int i = 0; i < n; i++)
+//     {
+//         PT tmp_look = ball_look;
+//         PT A = vertex[i];
+//         PT B = vertex[(i + 1) % n];
+//         PT C = ball_pos;
+//         PT D = ball_pos + (tmp_look * 100);
+//         // if (intersect(A, B, C, D))
+//         {
+//             PT dir = B - A;
+
+//             double theta = acos(dot2D(dir, tmp_look) / (det2D(dir) * det2D(tmp_look)));
+
+//             // printf("Wall: %d, Theta: %lf\n", i, theta * 180 / PI);
+
+//             PT I = findIntersectionInf(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+//             // printPT(I);
+//             if (isnanf(I.x) || isnanf(I.y))
+//             {
+//                 continue;
+//             }
+
+//             PT tmp = I - C;
+
+//             // printPT(ball_look);
+//             // printPT(tmp);
+//             double check_theta = acos(min(max(dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)), -1.0), 1.0));
+
+//             // printf("Check: %lf %d\n", check_theta, std::fabs(check_theta) < 1e-9);
+//             if (floor(check_theta) == 0)
+//             {
+//                 double distance = distancePointToPoint(C, I);
+//                 double minus = ball_radius / sin(theta);
+//                 if (dist > distance - minus)
+//                 {
+//                     idx = i;
+//                     dist = distance - minus;
+//                 }
+
+//                 // printf("Dist: %lf, T: %lf, N: %lf, D: %lf, %lf\n", dist, check_theta, dot2D(tmp, tmp_look), det2D(tmp) * det2D(tmp_look), dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)));
+//             }
+//         }
+//     }
+//     printf("To wall %d\n", idx);
+//     return idx;
+// }
+
+double getNearestWallManual(bool back)
+{
+    double dist = INT64_MAX;
+    int idx = -1;
+    for (int i = 0; i < n; i++)
+    {
+        PT tmp_look = ball_look * (back ? -1 : 1);
+        PT A = vertex[i];
+        PT B = vertex[(i + 1) % n];
+        PT C = ball_pos;
+        PT D = ball_pos + (tmp_look * 100);
+        // if (intersect(A, B, C, D))
+        {
+            PT dir = B - A;
+
+            double theta = acos(dot2D(dir, tmp_look) / (det2D(dir) * det2D(tmp_look)));
+
+            // printf("Wall: %d, Theta: %lf\n", i, theta * 180 / PI);
+
+            PT I = findIntersectionInf(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+            // printPT(I);
+            if (isnanf(I.x) || isnanf(I.y))
+            {
+                continue;
+            }
+
+            PT tmp = I - C;
+
+            // printPT(ball_look);
+            // printPT(tmp);
+            double check_theta = acos(min(max(dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)), -1.0), 1.0));
+
+            // printf("Check: %lf %d\n", check_theta, std::fabs(check_theta) < 1e-9);
+            if (floor(check_theta) == 0 || back)
+            {
+                double distance = distancePointToPoint(C, I);
+                double minus = ball_radius / sin(theta);
+                if (dist > distance - minus)
+                {
+                    idx = i;
+                    dist = distance - minus;
+                }
+
+                // printf("Dist: %lf, T: %lf, N: %lf, D: %lf, %lf\n", dist, check_theta, dot2D(tmp, tmp_look), det2D(tmp) * det2D(tmp_look), dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)));
+            }
+        }
+    }
+    return idx;
+}
+
+void handleCollision(bool back)
 {
     // printf("==============================Collision=================================\n");
     // int n = 4;
-    for (int i = 0; i < n; i++)
+
+    int i = getNearestWallManual(back);
+    // for (int i = 0; i < n; i++)
     {
         PT A = vertex[i];
         PT B = vertex[(i + 1) % n];
         PT C = ball_pos;
         PT D = ball_pos + (ball_look * 100);
-        if (intersect(A, B, C, D))
+        // if (intersect(A, B, C, D))
         {
             // printf("Collusion at wall %d\n",i);
-            PT X = findIntersection(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+            // PT X = findIntersection(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
 
-            printPT(X);
+            // printPT(X);
             //  printPT(findIntersection(-1,0,1,0,0.5,-1,0.5,1));
-            printPT(ball_pos);
+            // printPT(ball_pos);
             // printf("x_dist: %lf, y_dist: %lf\n\n", X.x - ball_pos.x,  X.y - ball_pos.y);
             PT direction_vector = A - B;
             PT orthogonal_direction_vector = PT(-direction_vector.y, direction_vector.x, 0);
             orthogonal_direction_vector = orthogonal_direction_vector / sqrt(dot(orthogonal_direction_vector, orthogonal_direction_vector));
             ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look, orthogonal_direction_vector);
             ball_right = PT(ball_look.y, -ball_look.x, 0); // Orthogonal
-            break;
         }
     }
     // printf("==============================Collision=================================\n");
@@ -726,101 +887,143 @@ void predictCollision()
 {
     // printf("==============================Collision=================================\n");
     // int n = 4;
-    for (int i = 0; i < n; i++)
+    int i = getNearestWallManual(false);
+    // for (int i = 0; i < n; i++)
     {
         PT A = vertex[i];
         PT B = vertex[(i + 1) % n];
         PT C = ball_pos;
         PT D = ball_pos + (ball_look * 100);
-        if (intersect(A, B, C, D))
+        // if (intersect(A, B, C, D))
         {
             PT direction_vector = A - B;
             PT orthogonal_direction_vector = PT(-direction_vector.y, direction_vector.x, 0);
             orthogonal_direction_vector = orthogonal_direction_vector / sqrt(dot(orthogonal_direction_vector, orthogonal_direction_vector));
-            next_ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look, orthogonal_direction_vector);
-            next_ball_right = PT(next_ball_look.y, -next_ball_look.x, 0); // Orthogonal
-            break;
+            ball_look = ball_look - orthogonal_direction_vector * 2 * dot(ball_look, orthogonal_direction_vector);
+            ball_right = PT(ball_look.y, -ball_look.x, 0); // Orthogonal
+            // break;
         }
     }
 }
 
-double det2D(PT v)
-{
-    return sqrt(v.x * v.x + v.y * v.y);
-}
+// double getMinDistance()
+// {
+//     double dist = INT64_MAX;
+//     for (int i = 0; i < n; i++)
+//     {
+//         PT tmp_look = ball_look;
+//         PT A = vertex[i];
+//         PT B = vertex[(i + 1) % n];
+//         PT C = ball_pos;
+//         PT D = ball_pos + (tmp_look * 100);
+//         // if (intersect(A, B, C, D))
+//         {
+//             PT dir = B - A;
+//             double theta = acos(dot2D(dir, tmp_look) / (det2D(dir) * det2D(tmp_look)));
 
-double distancePointToPoint(PT a, PT b)
-{
-    return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
-}
-double getMinDistance()
+//             // printf("Wall: %d, Theta: %lf\n", i, theta * 180 / PI);
+
+//             PT I = findIntersectionInf(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+
+//             if (isnanf(I.x) || isnanf(I.y))
+//             {
+//                 continue;
+//             }
+//             // printPT(I);
+//             // printPT(C);
+//             // printPT(I);
+
+//             PT tmp = I - C;
+
+//             // printPT(ball_look);
+//             // printPT(tmp);
+//             double check_theta = acos(min(max(dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)), -1.0), 1.0));
+
+//             // printf("Check: %lf %d\n", check_theta, std::fabs(check_theta) < 1e-9);
+//             if (floor(check_theta) == 0)
+//             {
+//                 double distance = distancePointToPoint(C, I);
+//                 double minus = ball_radius / sin(theta);
+//                 dist = min(dist, distance - minus);
+
+//                 printf("Dist: %lf, fULL: %lf, N: %lf, D: %lf, %lf\n", distance - minus, distance, dot2D(tmp, tmp_look), det2D(tmp) * det2D(tmp_look), dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)));
+//             }
+//         }
+//     }
+//     return dist;
+// }
+
+// int getCollidedWall()
+// {
+//     for (int i = 0; i < n; i++)
+//     {
+//         PT A = vertex[i];
+//         PT B = vertex[(i + 1) % n];
+//         PT C = ball_pos;
+//         PT D = ball_pos + (ball_look * 100);
+//         if (intersect(A, B, C, D))
+//         {
+//             return i;
+//         }
+//     }
+//     return -1;
+// }
+
+double getMinDistanceManual(bool back)
 {
     double dist = INT64_MAX;
     for (int i = 0; i < n; i++)
     {
+        PT tmp_look = ball_look * (back ? -1 : 1);
         PT A = vertex[i];
         PT B = vertex[(i + 1) % n];
         PT C = ball_pos;
-        PT D = ball_pos + (ball_look * 100);
-        if (intersect(A, B, C, D))
+        PT D = ball_pos + (tmp_look * 100);
+        // if (intersect(A, B, C, D))
         {
-            // printf("Collusion at wall %d\n", i);
             PT dir = B - A;
-            double theta = acos(dot(dir, ball_look) / (det2D(dir) * det2D(ball_look)));
+            double theta = acos(dot2D(dir, tmp_look) / (det2D(dir) * det2D(tmp_look)));
 
-            printf("Theta: %lf\n", theta * 180 / PI);
+            // printf("Wall: %d, Theta: %lf\n", i, theta * 180 / PI);
 
-            PT I = findIntersection(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
-            double distance = distancePointToPoint(C, I);
-            double minus = ball_radius / sin(theta);
-            dist = min(dist, distance - minus);
-            printf("Dist: %lf\n", dist);
+            PT I = findIntersectionInf(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+
+            if (isnanf(I.x) || isnanf(I.y))
+            {
+                continue;
+            }
+            // printPT(I);
+            // printPT(C);
+            // printPT(I);
+
+            PT tmp = I - C;
+
+            // printPT(ball_look);
+            // printPT(tmp);
+            double check_theta = acos(min(max(dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)), -1.0), 1.0));
+
+            // printf("Check: %lf %d\n", check_theta, std::fabs(check_theta) < 1e-9);
+            if (floor(check_theta) == 0)
+            {
+                double distance = distancePointToPoint(C, I);
+                double minus = ball_radius / sin(theta);
+                dist = min(dist, distance - minus);
+
+                printf("Dist: %lf, fULL: %lf, N: %lf, D: %lf, %lf\n", distance - minus, distance, dot2D(tmp, tmp_look), det2D(tmp) * det2D(tmp_look), dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)));
+            }
         }
     }
     return dist;
 }
 
-int getCollidedWall()
+bool checkCollision(bool back)
 {
-    for (int i = 0; i < n; i++)
+    double min_dist = getMinDistanceManual(back);
+    printf("Min_Dist: %lf\n", min_dist);
+    if (min_dist <= 1e-9)
     {
-        PT A = vertex[i];
-        PT B = vertex[(i + 1) % n];
-        PT C = ball_pos;
-        PT D = ball_pos + (ball_look * 100);
-        if (intersect(A, B, C, D))
-        {
-            return i;
-        }
-    }
-    return -1;
-}
-bool checkCollision()
-{
-    for (int i = 0; i < n; i++)
-    {
-        PT A = vertex[i];
-        PT B = vertex[(i + 1) % n];
-        PT C = ball_pos;
-        PT D = ball_pos + (ball_look * 100);
-        if (intersect(A, B, C, D))
-        {
-            // printf("Collusion at wall %d\n", i);
-            PT dir = B - A;
-
-            PT P = C - A;
-            double projection = (P.x * dir.x + P.y * dir.y) / (P.x * P.x + dir.y * dir.y);
-            double distance_x = P.x - projection * dir.x;
-            double distance_y = P.y - projection * dir.y;
-            double distance = sqrt(distance_x * distance_x + distance_y * distance_y);
-
-            distance = distancePointToLine(C.x, C.y, A.x, A.y, B.x, B.y);
-            // printf("Distance: %lf\n\n", distance);
-            if (distance <= ball_radius)
-            {
-                return true;
-            }
-        }
+        printf("Collusion\n");
+        return true;
     }
     return false;
 }
@@ -833,8 +1036,10 @@ void update(int time)
     // printf("Time: %d, Counter: %d\n", time, counter);
     if (animate)
     {
-        ball_pos = ball_pos + (ball_look * 0.25);
-        ball_rot_right -= 25;
+        double d = min(getMinDistanceManual(false), 0.25);
+        ball_pos = ball_pos + (ball_look * d);
+        updateBall(-25 * d / 0.25, 8, 40);
+        ball_rot_right -= 25 * d / 0.25;
         // if (checkCollision())
         // {
         //     // handleCollision();
@@ -849,7 +1054,7 @@ int current_id = 0;
 
 void collision(int id)
 {
-    printf("Callback %d %d\n", id, current_id);
+    // printf("Callback %d %d\n", id, current_id);
     int time = 10;
     if (id == current_id)
     {
@@ -858,25 +1063,28 @@ void collision(int id)
             if (predicted)
             {
                 // handleCollision();
-                ball_look = next_ball_look;
-                ball_right = next_ball_right;
+                // ball_look = next_ball_look;
+                // ball_right = next_ball_right;
+                predictCollision();
             }
             else
             {
                 current_id++;
                 id = current_id;
             }
-            predictCollision();
-            time = getMinDistance() / (det2D(ball_look) * 0.25 / 100);
+            // predictCollision();
+            double min_dist = getMinDistanceManual(false);
+            time = min_dist / (det2D(ball_look) * 0.25 / 100);
+            // printf("Dist: %lf\n", min_dist);
 
             // printf("Wall: %d\n, Look: ", wall);
             // printPT(ball_look);
             counter = 0;
             predicted = true;
+            printf("Callback at %d, id: %d\n", time, id);
+            glutPostRedisplay();
+            glutTimerFunc(max(time, 0), collision, id);
         }
-        // printf("Callback at %d, id: %d\n", time, id);
-        glutPostRedisplay();
-        glutTimerFunc(time, collision, id);
     }
 }
 
@@ -935,10 +1143,11 @@ void key(unsigned char key, int, int)
         if (!animate)
         {
             ball_rot_right -= 10;
-            ball_pos = ball_pos + (ball_look * 0.1);
-            if (checkCollision())
+            ball_pos = ball_pos + (ball_look * min(0.1, getMinDistanceManual(false)));
+            updateBall(-10, 8, 40);
+            if (checkCollision(false))
             {
-                handleCollision();
+                handleCollision(false);
             }
         }
         break;
@@ -948,18 +1157,19 @@ void key(unsigned char key, int, int)
         if (!animate)
         {
             ball_rot_right += 10;
-            ball_pos = ball_pos - (ball_look * 0.1);
-            if (checkCollision())
+            ball_pos = ball_pos - (ball_look * min(0.1, getMinDistanceManual(true)));
+            updateBall(10, 8, 40);
+            if (checkCollision(true))
             {
-                handleCollision();
+                handleCollision(true);
             }
         }
         break;
 
     case 'a':
     case 'j':
-        dir_angle = (dir_angle + 1) % 360;
-        ball_rot_z = (ball_rot_z + 1) % 360;
+        dir_angle = (dir_angle + 10) % 360;
+        ball_rot_z = (ball_rot_z + 10) % 360;
 
         rotate3D(ball_right, ball_up, ROT_ANG);
         rotate3D(ball_look, ball_up, ROT_ANG);
@@ -971,8 +1181,8 @@ void key(unsigned char key, int, int)
 
     case 'd':
     case 'l':
-        dir_angle = (360 + dir_angle - 1) % 360;
-        ball_rot_z = (360 + ball_rot_z - 1) % 360;
+        dir_angle = (360 + dir_angle - 10) % 360;
+        ball_rot_z = (360 + ball_rot_z - 10) % 360;
 
         rotate3D(ball_right, ball_up, -ROT_ANG);
         rotate3D(ball_look, ball_up, -ROT_ANG);
@@ -992,7 +1202,7 @@ void key(unsigned char key, int, int)
         break;
 
     case '0':
-        n++;
+        n = min(n + 1, 20);
         ball_pos.x = 0;
         ball_pos.y = 0;
         predicted = false;

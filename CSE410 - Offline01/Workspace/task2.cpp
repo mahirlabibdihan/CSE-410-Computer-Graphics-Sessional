@@ -753,7 +753,7 @@ double distancePointToPoint(PT a, PT b)
 {
     return sqrt((b.x - a.x) * (b.x - a.x) + (b.y - a.y) * (b.y - a.y));
 }
-double getListDistance()
+double getMinDistance()
 {
     double dist = INT64_MAX;
     for (int i = 0; i < n; i++)
@@ -849,32 +849,35 @@ int current_id = 0;
 
 void collision(int id)
 {
-    // printf("Callback\n");
+    printf("Callback %d %d\n", id, current_id);
     int time = 10;
-    if (animate)
+    if (id == current_id)
     {
-        if (predicted)
+        if (animate)
         {
-            // handleCollision();
-            ball_look = next_ball_look;
-            ball_right = next_ball_right;
-        }
-        else
-        {
-            current_id++;
-            id = current_id;
-        }
-        predictCollision();
-        time = getListDistance() / (det2D(ball_look) * 0.25 / 100);
+            if (predicted)
+            {
+                // handleCollision();
+                ball_look = next_ball_look;
+                ball_right = next_ball_right;
+            }
+            else
+            {
+                current_id++;
+                id = current_id;
+            }
+            predictCollision();
+            time = getMinDistance() / (det2D(ball_look) * 0.25 / 100);
 
-        // printf("Wall: %d\n, Look: ", wall);
-        // printPT(ball_look);
-        counter = 0;
-        predicted = true;
+            // printf("Wall: %d\n, Look: ", wall);
+            // printPT(ball_look);
+            counter = 0;
+            predicted = true;
+        }
+        // printf("Callback at %d, id: %d\n", time, id);
+        glutPostRedisplay();
+        glutTimerFunc(time, collision, id);
     }
-    // printf("Callback at %d, id: %d\n", time, id);
-    glutPostRedisplay();
-    glutTimerFunc(time, collision, time);
 }
 
 bool key_state[128];
@@ -961,7 +964,8 @@ void key(unsigned char key, int, int)
         rotate3D(ball_right, ball_up, ROT_ANG);
         rotate3D(ball_look, ball_up, ROT_ANG);
         predicted = false;
-        getListDistance();
+        if (animate)
+            glutTimerFunc(0, collision, ++current_id);
         // printf("%lf %lf\n",atan(ball_look.y / ball_look.x), fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0));
         break;
 
@@ -973,7 +977,9 @@ void key(unsigned char key, int, int)
         rotate3D(ball_right, ball_up, -ROT_ANG);
         rotate3D(ball_look, ball_up, -ROT_ANG);
         predicted = false;
-        getListDistance();
+        // getMinDistance();
+        if (animate)
+            glutTimerFunc(0, collision, ++current_id);
         // printf("%lf %lf\n",atan(ball_look.y / ball_look.x), fmod((atan2(ball_look.y, ball_look.x)* 180 / PI)+360.0,360.0));
         break;
     case ' ':
@@ -981,6 +987,7 @@ void key(unsigned char key, int, int)
         if (animate)
         {
             predicted = false;
+            glutTimerFunc(0, collision, ++current_id);
         }
         break;
 
@@ -989,6 +996,8 @@ void key(unsigned char key, int, int)
         ball_pos.x = 0;
         ball_pos.y = 0;
         predicted = false;
+        if (animate)
+            glutTimerFunc(0, collision, ++current_id);
         {
             double center_x = 0.0;
             double center_y = 0.0;
@@ -1004,6 +1013,8 @@ void key(unsigned char key, int, int)
         ball_pos.x = 0;
         ball_pos.y = 0;
         predicted = false;
+        if (animate)
+            glutTimerFunc(0, collision, ++current_id);
         {
             double center_x = 0.0;
             double center_y = 0.0;
@@ -1121,7 +1132,7 @@ int main(int argc, char **argv)
     // glutPassiveMotionFunc(mouseMove);
     glutMouseWheelFunc(mouseScroll);
     glutTimerFunc(100, update, 100);
-    glutTimerFunc(10, collision, 0);
+    // glutTimerFunc(10, collision, 0);
     // glMatrixMode(GL_MODELVIEW);
 
     glMatrixMode(GL_PROJECTION);

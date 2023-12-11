@@ -357,8 +357,8 @@ void key(unsigned char key, int, int)
     case 'i':
         if (!animate)
         {
-            ball.pos = ball.pos + (ball.look * min(0.1, getMinDistance(false)));
-            ball.rotate(-10, 8, 40);
+            ball.pos = ball.pos + (ball.look * min(0.2, getMinDistance(false)));
+            ball.rotate(-20, 8, 40);
             if (checkCollision(false))
             {
                 handleCollision(false);
@@ -369,8 +369,8 @@ void key(unsigned char key, int, int)
     case 'k':
         if (!animate)
         {
-            ball.pos = ball.pos - (ball.look * min(0.1, getMinDistance(true)));
-            ball.rotate(10, 8, 40);
+            ball.pos = ball.pos - (ball.look * min(0.2, getMinDistance(true)));
+            ball.rotate(20, 8, 40);
             if (checkCollision(true))
             {
                 handleCollision(true);

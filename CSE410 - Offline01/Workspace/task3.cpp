@@ -20,48 +20,6 @@
 GLint WindowHeight = 600;
 GLint WindowWidth = 600;
 Camera camera;
-// void drawSphereQuad(double radius, int slices, int stacks, double R, double G, double B)
-// {
-//     struct PT points[100][100];
-//     int i, j;
-//     double h, r;
-//     // generate points
-//     GLfloat a, da = 2 * PI / stacks;
-//     for (i = 0; i <= stacks; i++)
-//     {
-//         h = radius * sin(((double)i / stacks) * (PI / 2));
-//         r = radius * cos(((double)i / stacks) * (PI / 2));
-//         for (j = 0; j < 6; j++)
-//         {
-//             points[i][j].x = r * cos(((double)j / (double)slices) * 2 * PI);
-//             points[i][j].y = r * sin(((double)j / (double)slices) * 2 * PI);
-//             points[i][j].z = h;
-//         }
-//     }
-//     // draw quads using generated points
-//     for (i = 0; i < stacks; i++)
-//     {
-//         // glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
-//         glColor3f(R, G, B);
-//         for (j = 0; j < 5; j++)
-//         {
-//             glBegin(GL_QUADS);
-//             {
-//                 // upper hemisphere
-//                 glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
-//                 glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
-//                 glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
-//                 glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
-//                 // //lower hemisphere
-//                 // glVertex3f(points[i][j].x,points[i][j].y,-points[i][j].z);
-//                 // glVertex3f(points[i][j+1].x,points[i][j+1].y,-points[i][j+1].z);
-//                 // glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,-points[i+1][j+1].z);
-//                 // glVertex3f(points[i+1][j].x,points[i+1][j].y,-points[i+1][j].z);
-//             }
-//             glEnd();
-//         }
-//     }
-// }
 
 double maxTriangleLength = 1.6;
 double triangleLength = 1.6;
@@ -165,15 +123,15 @@ void drawPyramids()
     }
 }
 
-void drawCylinder_v2(double radius, double height, int segments = 100)
+void drawCylinderPart(double radius, double height, int segments = 100)
 {
     struct PT points[segments + 1];
 
-    double offset = 70.5287794 * M_PI / 180.0;
+    double offset = radians(70.5287794);
 
-    for (int i = 0; i < segments + 1; i++)
+    for (int i = 0; i <= segments; i++)
     {
-        double theta = -offset / 2 + i * offset / segments;
+        double theta = (0 - offset) / 2 + offset * (1.0 * i / segments);
         points[i].x = radius * cos(theta);
         points[i].y = radius * sin(theta);
     }
@@ -193,13 +151,14 @@ void drawCylinders()
 {
     glColor3f(1.0f, 1.0f, 0.0f);
     double diff = maxTriangleLength - triangleLength;
-
+    double radius = (diff / sqrt(2)) * cos(radians(70.5287794 / 2));
+    // Each side of triangle has length = triangleLength * sqrt(2)
     for (int i = 0; i < 4; i++)
     {
         glPushMatrix();
         glRotatef((45 + i * 90), 0, 1, 0);
         glTranslatef(triangleLength / sqrt(2), 0, 0);
-        drawCylinder_v2(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), triangleLength * sqrt(2));
+        drawCylinderPart(radius, triangleLength * sqrt(2));
         glPopMatrix();
     }
 
@@ -209,7 +168,7 @@ void drawCylinders()
         glRotatef(90, 1, 0, 0);
         glRotatef((45 + i * 90), 0, 1, 0);
         glTranslatef(triangleLength / sqrt(2), 0, 0);
-        drawCylinder_v2(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), triangleLength * sqrt(2));
+        drawCylinderPart(radius, triangleLength * sqrt(2));
         glPopMatrix();
     }
     for (int i = 0; i < 4; i++)
@@ -218,7 +177,7 @@ void drawCylinders()
         glRotatef(90, 0, 0, 1);
         glRotatef((45 + i * 90), 0, 1, 0);
         glTranslatef(triangleLength / sqrt(2), 0, 0);
-        drawCylinder_v2(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), triangleLength * sqrt(2));
+        drawCylinderPart(radius, triangleLength * sqrt(2));
         glPopMatrix();
     }
 }
@@ -228,22 +187,20 @@ double length(PT a) { return sqrt(dot(a, a)); }
 PT normalize(PT a) { return a / length(a); }
 void drawSphereQuad(double radius, int segments)
 {
-
     struct PT points[segments + 1][segments + 1];
     int i, j;
     double x, y;
     // generate points
     for (i = 0; i <= segments; i++)
     {
-
         for (j = 0; j <= segments; j++)
         {
-            x = -1 + (double)i / segments * 2;
-            y = -1 + (double)j / segments * 2;
-            points[i][j].x = x;
-            points[i][j].y = y;
+            // Create square from (-1,-1,1) to (1,1,1)
+            points[i][j].x = -1 + (double)i / segments * 2;
+            points[i][j].y = -1 + (double)j / segments * 2;
             points[i][j].z = 1;
 
+            // Then normalize the radius vectors
             points[i][j] = normalize(points[i][j]);
             points[i][j] = points[i][j] * radius;
         }
@@ -263,22 +220,6 @@ void drawSphereQuad(double radius, int segments)
             glEnd();
         }
     }
-
-    // glColor3f(0, 0, 0);
-    // for (i = 0; i < segments; i++)
-    // {
-    //     for (j = 0; j < segments; j++)
-    //     {
-    //         glBegin(GL_LINE_STRIP);
-    //         {
-    //             glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
-    //             glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
-    //             glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
-    //             glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
-    //         }
-    //         glEnd();
-    //     }
-    // }
 }
 
 double angleRotationZ = 45.0;
@@ -286,15 +227,15 @@ double angleRotationZ = 45.0;
 void drawSpheres()
 {
     double diff = maxTriangleLength - triangleLength;
+    double radius = (diff / sqrt(2)) * cos(radians(70.5287794 / 2));
     for (int i = 0; i < 4; i++)
     {
-
         glPushMatrix();
         {
             glColor3f(0, i % 2, (i + 1) % 2); // blue / green
             glRotatef(90 * i, 0, 1, 0);
             glTranslatef(0, 0, triangleLength);
-            drawSphereQuad(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), 10);
+            drawSphereQuad(radius, 10);
         }
         glPopMatrix();
     }
@@ -307,7 +248,7 @@ void drawSpheres()
             glColor3f(1.0f, 0.0f, 0.0f); // red
             glRotatef(90 + 180 * i, 1, 0, 0);
             glTranslatef(0, 0, triangleLength);
-            drawSphereQuad(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), 10);
+            drawSphereQuad(radius, 10);
         }
         glPopMatrix();
     }
@@ -411,7 +352,7 @@ void key(unsigned char key, int, int)
 
     case ',':
         triangleLength -= 0.01;
-        sphereRadius += sphereStep;
+        // sphereRadius += sphereStep;
         if (triangleLength < 0)
         {
             triangleLength = 0;
@@ -420,7 +361,7 @@ void key(unsigned char key, int, int)
         break;
     case '.':
         triangleLength += 0.01;
-        sphereRadius -= sphereStep;
+        // sphereRadius -= sphereStep;
         if (triangleLength > maxTriangleLength)
         {
             triangleLength = maxTriangleLength;

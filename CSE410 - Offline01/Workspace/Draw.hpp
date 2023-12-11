@@ -115,7 +115,7 @@ void drawCylinder(float radius, float height)
     glBegin(GL_QUAD_STRIP);
     for (int i = 0; i <= numSegments; ++i)
     {
-        float theta = 2.0 * M_aaaaaaaaaaaaaaaaaaaaaPI * static_cast<float>(i) / numSegments;
+        float theta = 2.0 * M_PI * static_cast<float>(i) / numSegments;
         float x = radius * cos(theta);
         float y = radius * sin(theta);
 

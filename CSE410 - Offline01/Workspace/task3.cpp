@@ -1,68 +1,75 @@
+
 #ifdef __linux__
 #include <GL/glut.h>
+#include <GL/freeglut_ext.h>
+#include <math.h>
+#include <stdio.h>
 #elif WIN32
 #include <windows.h>
 #include <glut.h>
 #endif
 
-#include <cmath>
-#include <iostream>
+#include "Point.hpp"
+#include "Camera.hpp"
+#include "Draw.hpp"
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
+#define MAX(x, y) ((x) > (y) ? (x) : (y))
+#define PI 3.14159265358979324
+#define xyz(r, a, t) r *cos(a) * cos(t), r *cos(a) * sin(t), r *sin(a)
+#define color(R, G, B) .3 + R / (1.3 * r), .3 + G / (1.3 * r), .3 + B / (1.3 * r)
+GLint WindowHeight = 600;
+GLint WindowWidth = 600;
+Camera camera;
+// void drawSphereQuad(double radius, int slices, int stacks, double R, double G, double B)
+// {
+//     struct PT points[100][100];
+//     int i, j;
+//     double h, r;
+//     // generate points
+//     GLfloat a, da = 2 * PI / stacks;
+//     for (i = 0; i <= stacks; i++)
+//     {
+//         h = radius * sin(((double)i / stacks) * (PI / 2));
+//         r = radius * cos(((double)i / stacks) * (PI / 2));
+//         for (j = 0; j < 6; j++)
+//         {
+//             points[i][j].x = r * cos(((double)j / (double)slices) * 2 * PI);
+//             points[i][j].y = r * sin(((double)j / (double)slices) * 2 * PI);
+//             points[i][j].z = h;
+//         }
+//     }
+//     // draw quads using generated points
+//     for (i = 0; i < stacks; i++)
+//     {
+//         // glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
+//         glColor3f(R, G, B);
+//         for (j = 0; j < 5; j++)
+//         {
+//             glBegin(GL_QUADS);
+//             {
+//                 // upper hemisphere
+//                 glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
+//                 glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
+//                 glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
+//                 glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
+//                 // //lower hemisphere
+//                 // glVertex3f(points[i][j].x,points[i][j].y,-points[i][j].z);
+//                 // glVertex3f(points[i][j+1].x,points[i][j+1].y,-points[i][j+1].z);
+//                 // glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,-points[i+1][j+1].z);
+//                 // glVertex3f(points[i+1][j].x,points[i+1][j].y,-points[i+1][j].z);
+//             }
+//             glEnd();
+//         }
+//     }
+// }
 
-#define pi (2 * acos(0.0))
+double maxTriangleLength = 1.6;
+double triangleLength = 1.6;
 
-// Global variables
+double maxSphereRadius = maxTriangleLength / sqrt(3.0);
+double sphereRadius = 0;
+double sphereStep = maxSphereRadius / 16.0;
 
-struct Point
-{
-    Point() {}
-    double x, y, z;
-
-    Point(double x, double y, double z) : x(x), y(y), z(z) {}
-    Point(const Point &p) : x(p.x), y(p.y), z(p.z) {}
-
-    // arithemtic operations
-    Point operator+(Point b) { return Point(x + b.x, y + b.y, z + b.z); }
-    Point operator-(Point b) { return Point(x - b.x, y - b.y, z - b.z); }
-    Point operator*(double b) { return Point(x * b, y * b, z * b); }
-    Point operator/(double b) { return Point(x / b, y / b, z / b); }
-    Point operator*(Point b) { return Point(y * b.z - z * b.y, z * b.x - x * b.z, x * b.y - y * b.x); }
-};
-
-double dot(Point a, Point b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
-double length(Point a) { return sqrt(dot(a, a)); }
-Point normalize(Point a) { return a / length(a); }
-
-// Global variables
-struct Point pos; // position of the eye
-struct Point l;   // look/forward direction
-struct Point r;   // right direction
-struct Point u;   // up direction
-double angleRotationZ = 45.0;
-/* Initialize OpenGL Graphics */
-void initGL()
-{
-    // Set "clearing" or background color
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black and opaque
-    glEnable(GL_DEPTH_TEST);              // Enable depth testing for z-culling
-
-    /*pos.x=4;pos.y=4;pos.z=4;
-
-    l.x=-4;l.y=-4;l.z=-4;
-    u.x=0;u.y=1;u.z=0;
-    r.x=1;r.y=0;r.z=0;*/
-    /*
-    pos = {4,4,4};
-    u = {0,0,1};
-    r = {0,1,0};
-    l = {-1,0,0};
-    */
-    pos = {5, 0, 2};
-    l = {-1, 0, 0};
-    r = {0, 1, 0};
-    u = {0, 0, 1};
-}
-
-/* Draw axes: X in Red, Y in Green and Z in Blue */
 void drawAxes()
 {
     glLineWidth(3);
@@ -84,6 +91,17 @@ void drawAxes()
     glEnd();
 }
 
+void drawTriangle()
+{
+    // glColor3f(1.0,0.0,0.0);
+    glBegin(GL_TRIANGLES);
+    {
+        glVertex3f(1, 0, 0);
+        glVertex3f(0, 1, 0);
+        glVertex3f(0, 0, 1);
+    }
+    glEnd();
+}
 void drawGrid()
 {
     int i;
@@ -94,8 +112,8 @@ void drawGrid()
         for (i = -18; i <= 18; i++)
         {
 
-            if (i == 0)
-                continue; // SKIP the MAIN axes
+            // if (i == 0)
+            //     continue; // SKIP the MAIN axes
 
             // lines parallel to Y-axis
             glVertex3f(i * 0.1, -1.9, 0);
@@ -109,22 +127,47 @@ void drawGrid()
     glEnd();
 }
 
-void drawTriangle()
+void drawPyramids()
 {
-    // glColor3f(1.0,0.0,0.0);
-    glBegin(GL_TRIANGLES);
+    for (int i = 0; i < 4; i++)
     {
-        glVertex3f(1, 0, 0);
-        glVertex3f(0, 1, 0);
-        glVertex3f(0, 0, 1);
+        glPushMatrix();
+        glColor3f((i + 1) % 2, i % 2, 1.0f); // purple / cyan
+        glRotatef(90 * i, 0, 0, 1);
+        glTranslatef(maxTriangleLength / 3.0, maxTriangleLength / 3.0, maxTriangleLength / 3.0);
+        glScaled(triangleLength, triangleLength, triangleLength);
+        glPushMatrix();
+        {
+            glTranslatef(-1 / 3.0, -1 / 3.0, -1 / 3.0);
+            drawTriangle();
+        }
+        glPopMatrix();
+        glPopMatrix();
     }
-    glEnd();
-}
-int numSegments = 5;
 
-void drawCylinder_v2(double height, double radius, int segments)
+    for (int i = 0; i < 4; i++)
+    {
+        glPushMatrix();
+        {
+            glColor3f(i % 2, (i + 1) % 2, 1.0f); // purple / cyan
+            glRotatef(90 * i, 0, 0, 1);
+            glRotatef(180, 1, 1, 0);
+            glTranslatef(maxTriangleLength / 3.0, maxTriangleLength / 3.0, maxTriangleLength / 3.0);
+            glScaled(triangleLength, triangleLength, triangleLength);
+            glPushMatrix();
+            {
+                glTranslatef(-1 / 3.0, -1 / 3.0, -1 / 3.0);
+                drawTriangle();
+            }
+            glPopMatrix();
+        }
+        glPopMatrix();
+    }
+}
+
+void drawCylinder_v2(double radius, double height, int segments = 100)
 {
-    struct Point points[segments + 1];
+    struct PT points[segments + 1];
 
     double offset = 70.5287794 * M_PI / 180.0;
 
@@ -144,24 +187,49 @@ void drawCylinder_v2(double height, double radius, int segments)
         glVertex3f(points[i + 1].x, points[i + 1].y, height / 2);
     }
     glEnd();
-
-    glColor3f(0,0,0);
-    glBegin(GL_LINES);
-    for (int i = 0; i < segments; i++)
-    {
-        glVertex3f(points[i].x, points[i].y, height / 2);
-        glVertex3f(points[i].x, points[i].y, -height / 2);
-        glVertex3f(points[i + 1].x, points[i + 1].y, -height / 2);
-        glVertex3f(points[i + 1].x, points[i + 1].y, height / 2);
-    }
-    glEnd();
-    glColor3f(1.0f, 1.0f, 0.0f);
 }
 
+void drawCylinders()
+{
+    glColor3f(1.0f, 1.0f, 0.0f);
+    double diff = maxTriangleLength - triangleLength;
+
+    for (int i = 0; i < 4; i++)
+    {
+        glPushMatrix();
+        glRotatef((45 + i * 90), 0, 1, 0);
+        glTranslatef(triangleLength / sqrt(2), 0, 0);
+        drawCylinder_v2(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), triangleLength * sqrt(2));
+        glPopMatrix();
+    }
+
+    for (int i = 0; i < 4; i++)
+    {
+        glPushMatrix();
+        glRotatef(90, 1, 0, 0);
+        glRotatef((45 + i * 90), 0, 1, 0);
+        glTranslatef(triangleLength / sqrt(2), 0, 0);
+        drawCylinder_v2(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), triangleLength * sqrt(2));
+        glPopMatrix();
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        glPushMatrix();
+        glRotatef(90, 0, 0, 1);
+        glRotatef((45 + i * 90), 0, 1, 0);
+        glTranslatef(triangleLength / sqrt(2), 0, 0);
+        drawCylinder_v2(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), triangleLength * sqrt(2));
+        glPopMatrix();
+    }
+}
+
+// double dot(PT a, PT b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+double length(PT a) { return sqrt(dot(a, a)); }
+PT normalize(PT a) { return a / length(a); }
 void drawSphereQuad(double radius, int segments)
 {
 
-    struct Point points[segments + 1][segments + 1];
+    struct PT points[segments + 1][segments + 1];
     int i, j;
     double x, y;
     // generate points
@@ -193,85 +261,31 @@ void drawSphereQuad(double radius, int segments)
                 glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
             }
             glEnd();
-            
         }
     }
 
-    glColor3f(0,0,0);
-    for (i = 0; i < segments; i++)
-    {
-        for (j = 0; j < segments; j++)
-        {
-            glBegin(GL_LINE_STRIP);
-            {
-                glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
-                glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
-                glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
-                glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
-            }
-            glEnd();
-            
-        }
-    }
+    // glColor3f(0, 0, 0);
+    // for (i = 0; i < segments; i++)
+    // {
+    //     for (j = 0; j < segments; j++)
+    //     {
+    //         glBegin(GL_LINE_STRIP);
+    //         {
+    //             glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
+    //             glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
+    //             glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
+    //             glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
+    //         }
+    //         glEnd();
+    //     }
+    // }
 }
 
-double maxTriangleLength = 1.6;
-double triangleLength = 1.6;
-
-double maxSphereRadius = maxTriangleLength / sqrt(3.0);
-double sphereRadius = 0;
-double sphereStep = maxSphereRadius / 16.0;
-
-void drawCylinders()
-{
-
-    glColor3f(1.0f, 1.0f, 0.0f);
-
-    for (int i = 0; i < 4; i++)
-    {
-
-        glPushMatrix();
-        {
-            // glRotatef(45 + i * 90, 0, 1, 0);
-            // glTranslatef(triangleLength / sqrt(2), 0, 0);
-            drawCylinder_v2(triangleLength * sqrt(2), sphereRadius, 10);
-        }
-        glPopMatrix();
-    }
-
-    //////////////
-
-    for (int i = 0; i < 4; i++)
-    {
-
-        glPushMatrix();
-        {
-            glRotatef(90, 1, 0, 0);
-            glRotatef(45 + i * 90, 0, 1, 0);
-            glTranslatef(triangleLength / sqrt(2), 0, 0);
-            drawCylinder_v2(triangleLength * sqrt(2), sphereRadius, 10);
-        }
-        glPopMatrix();
-    }
-
-    ///////////////
-    for (int i = 0; i < 4; i++)
-    {
-
-        glPushMatrix();
-        {
-            glRotatef(90, 0, 0, 1);
-            glRotatef(45 + i * 90, 0, 1, 0);
-            glTranslatef(triangleLength / sqrt(2), 0, 0);
-            drawCylinder_v2(triangleLength * sqrt(2), sphereRadius, 10);
-        }
-        glPopMatrix();
-    }
-}
+double angleRotationZ = 45.0;
 
 void drawSpheres()
 {
-
+    double diff = maxTriangleLength - triangleLength;
     for (int i = 0; i < 4; i++)
     {
 
@@ -280,7 +294,7 @@ void drawSpheres()
             glColor3f(0, i % 2, (i + 1) % 2); // blue / green
             glRotatef(90 * i, 0, 1, 0);
             glTranslatef(0, 0, triangleLength);
-            drawSphereQuad(sphereRadius, 10);
+            drawSphereQuad(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), 10);
         }
         glPopMatrix();
     }
@@ -293,197 +307,110 @@ void drawSpheres()
             glColor3f(1.0f, 0.0f, 0.0f); // red
             glRotatef(90 + 180 * i, 1, 0, 0);
             glTranslatef(0, 0, triangleLength);
-            drawSphereQuad(sphereRadius, 10);
+            drawSphereQuad(diff / (sqrt(6) * tan(70.5287794 * PI / 360.0)), 10);
         }
         glPopMatrix();
     }
 }
 
-void drawPyramids()
-{
-    double diff = maxTriangleLength - triangleLength;
-    diff = diff / 3.0;
-    for (int i = 0; i < 4; i++)
-    {
-
-        glPushMatrix();
-        {
-            glColor3f((i + 1) % 2, i % 2, 1.0f); // purple / cyan
-            glRotatef(90 * i, 0, 1, 0);
-            glTranslatef(diff, diff, diff);
-            glScaled(triangleLength, triangleLength, triangleLength);
-            drawTriangle();
-        }
-        glPopMatrix();
-    }
-
-     for(int i=0;i<4;i++){
-
-        glPushMatrix();{
-            glColor3f(i%2, (i+1)%2, 1.0f);  // cyan / pruple
-            glRotatef(90*i,0,1,0);
-            glRotatef(180,1,0,1);
-            glTranslatef(diff,diff,diff);
-            glScaled(triangleLength,triangleLength,triangleLength);
-            drawTriangle();
-        }glPopMatrix();
-
-    }
-}
-
-void drawAll()
-{
-    // drawPyramids();
-    drawSpheres();
-    // drawCylinders();
-}
-
-/*  Handler for window-repaint event. Call back when the window first appears and
-    whenever the window needs to be re-painted. */
 void display()
 {
-    float cx = 1, cy = 1;
-    //  glTranslatef(-cx, -cy, 0);
-    // glClear(GL_COLOR_BUFFER_BIT);            // Clear the color buffer (background)
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity(); // Ensures that each time when we enter the projection mode, the matrix will be reset to identity matrix
+    camera.setCamera();
+    // Clear all pixels
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glMatrixMode(GL_MODELVIEW); // To operate on Model-View matrix
-    glLoadIdentity();           // Reset the model-view matrix
 
-    // default arguments of gluLookAt
-    // gluLookAt(0,0,0, 0,0,-100, 0,1,0);
-
-    // control viewing (or camera)
-    gluLookAt(pos.x, pos.y, pos.z,
-              pos.x + l.x, pos.y + l.y, pos.z + l.z,
-              u.x, u.y, u.z);
-    // draw
-    glRotatef(angleRotationZ, 0, 0, 1);
-
-    // drawAxes();
+    drawAxes();
     // drawGrid();
-    drawAll();
 
-    glutSwapBuffers(); // Render now
+    glRotatef(angleRotationZ, 0, 0, 1);
+    drawPyramids();
+    drawCylinders();
+    drawSpheres();
+
+    glutSwapBuffers();
 }
 
-/* Handler for window re-size event. Called back when the window first appears and
-   whenever the window is re-sized with its new width and height */
-void reshapeListener(GLsizei width, GLsizei height)
-{ // GLsizei for non-negative integer
-    // Compute aspect ratio of the new window
-    if (height == 0)
-        height = 1; // To prevent divide by 0
-    GLfloat aspect = (GLfloat)width / (GLfloat)height;
-
-    // Set the viewport to cover the new window
-    glViewport(0, 0, width, height);
-
-    // Set the aspect ratio of the clipping area to match the viewport
-    glMatrixMode(GL_PROJECTION); // To operate on the Projection matrix
-    glLoadIdentity();            // Reset the projection matrix
-                                 /*if (width >= height) {
-                                     // aspect >= 1, set the height from -1 to 1, with larger width
-                                     gluOrtho2D(-1.0 * aspect, 1.0 * aspect, -1.0, 1.0);
-                                 } else {
-                                     // aspect < 1, set the width to -1 to 1, with larger height
-                                     gluOrtho2D(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect);
-                                 }*/
-                                 // Enable perspective projection with fovy, aspect, zNear and zFar
-    // gluPerspective(45.0f, aspect, 0.1f, 100.0f);
-    gluPerspective(80, 1, 1, 1000.0);
-}
-
-/* Callback handler for normal-key event */
-void keyboardListener(unsigned char key, int x, int y)
+void resize(int w, int h)
 {
-    double v = 0.1;
-    double rate = 0.1;
-    // Point oldEye = eye;
+    glViewport(0, 0, w, h); // resizing the window
 
-    double s;
-    // float v = 0.1;
+    // Setup viewing volume
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+
+    WindowWidth = w;
+    WindowHeight = h;
+    // L      R     B    T      N       F
+    // glOrtho(-WindowWidth / 2, WindowWidth / 2, -WindowHeight / 2, WindowHeight / 2, -WindowWidth / 2, WindowWidth / 2);
+    gluPerspective(
+        60,          // fov
+        1.0 * w / h, // aspect
+        // 1,
+        1,
+        200);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+
+void init()
+{
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+}
+
+void update(int time)
+{
+    // angle = (angle + 1) % 360;
+    // printf("%d\n", dir_angle);
+    glutPostRedisplay();
+    glutTimerFunc(time, update, time);
+}
+
+bool last_i = true;
+void key(unsigned char key, int, int)
+{
+    // if (key == 27) glutLeaveMainLoop();
+    if (key == 27)
+        glutLeaveMainLoop();
     switch (key)
     {
-    case ' ':
-        printf("pos: %f %f %f\n", pos.x, pos.y, pos.z);
-        printf("l: %f %f %f\n", l.x, l.y, l.z);
-        printf("r: %f %f %f\n", r.x, r.y, r.z);
-        printf("u: %f %f %f\n", u.x, u.y, u.z);
-        printf("angle: %f\n", angleRotationZ);
-
+    case '1':
+        camera.rotateLeft();
         break;
+    case '2':
+        camera.moveRight();
+        break;
+    case '3':
+        camera.rotateUp();
+        break;
+    case '4':
+        camera.rotateDown();
+        break;
+    case '5':
+        camera.tiltClock();
+        break;
+    case '6':
+        camera.tiltCounterClock();
+        break;
+    case 'w':
+        camera.moveUpRef();
+        break;
+    case 's':
+        camera.moveDownRef();
+        break;
+
     case 'd':
         angleRotationZ -= 5.0f;
         break;
     case 'a':
         angleRotationZ += 5.0f;
         break;
-    case 'w':
-        pos.z += v;
-        break;
-    case 's':
-        pos.z -= v;
-        break;
-        // Control eye (location of the eye)
-        // control eye.x
-    case '1':
-        r = r * cos(rate) + l * sin(rate);
-        l = l * cos(rate) - r * sin(rate);
-        break;
-
-    case '2':
-        r = r * cos(-rate) + l * sin(-rate);
-        l = l * cos(-rate) - r * sin(-rate);
-        break;
-
-    case '3':
-        l = l * cos(rate) + u * sin(rate);
-        u = u * cos(rate) - l * sin(rate);
-        break;
-
-    case '4':
-        l = l * cos(-rate) + u * sin(-rate);
-        u = u * cos(-rate) - l * sin(-rate);
-        break;
-
-    case '5':
-        u = u * cos(rate) + r * sin(rate);
-        r = r * cos(rate) - u * sin(rate);
-        break;
-
-    case '6':
-        u = u * cos(-rate) + r * sin(-rate);
-        r = r * cos(-rate) - u * sin(-rate);
-
-        break;
-
-        // Control center (location where the eye is looking at)
-        // control centerx
-        /* case 'z':
-             centerx += v;
-             break;
-         case 'x':
-             centerx -= v;
-             break;
-         // control centery
-         case 'e':
-             centery += v;
-             break;
-         case 'r':
-             centery -= v;
-             break;
-         // control centerz
-         case 't':
-             centerz += v;
-             break;
-         case 'y':
-             centerz -= v;
-             break;
-     */
-        // Control what is shown
 
     case ',':
-        triangleLength -= 0.1;
+        triangleLength -= 0.01;
         sphereRadius += sphereStep;
         if (triangleLength < 0)
         {
@@ -492,7 +419,7 @@ void keyboardListener(unsigned char key, int x, int y)
         }
         break;
     case '.':
-        triangleLength += 0.1;
+        triangleLength += 0.01;
         sphereRadius -= sphereStep;
         if (triangleLength > maxTriangleLength)
         {
@@ -500,71 +427,140 @@ void keyboardListener(unsigned char key, int x, int y)
             sphereRadius = 0;
         }
         break;
-    // Control exit
-    case 27:     // ESC key
-        exit(0); // Exit window
-        break;
     }
-
-    // look = look - eye + oldEye;
-
-    glutPostRedisplay(); // Post a paint request to activate display()
 }
-
-/* Callback handler for special-key event */
-void specialKeyListener(int key, int x, int y)
+void specialkey(int key, int x, int y)
 {
     switch (key)
     {
-    case GLUT_KEY_UP: // down arrow key
-        pos = pos + l;
+    case GLUT_KEY_UP:
+        camera.moveForward();
         break;
-    case GLUT_KEY_DOWN: // up arrow key
-        pos = pos - l;
+    case GLUT_KEY_DOWN:
+        camera.moveBackward();
         break;
 
     case GLUT_KEY_RIGHT:
-        pos = pos + r;
+        camera.moveRight();
         break;
+
     case GLUT_KEY_LEFT:
-        pos = pos - r;
+        camera.moveLeft();
         break;
 
     case GLUT_KEY_PAGE_UP:
-        pos = pos + u;
+        camera.moveUp();
         break;
     case GLUT_KEY_PAGE_DOWN:
-        pos = pos - u;
-        break;
-
-    case GLUT_KEY_INSERT:
-        break;
-
-    case GLUT_KEY_HOME:
-        break;
-    case GLUT_KEY_END:
+        camera.moveDown();
         break;
 
     default:
         break;
     }
+
     glutPostRedisplay();
 }
 
-/* Main function: GLUT runs as a console application starting at main()  */
+// void mouseDrag(int mx, int my)
+// {
+//     // iMouseX = mx;
+//     // iMouseY = iScreenHeight - my;
+//     // iMouseDrag(iMouseX, iMouseY);
+//     glutSwapBuffers();
+// }
+
+// void mouseMove(int mx, int my)
+// {
+//     // iMouseDirection(mx, iScreenHeight - my);
+//     // iMouseX = mx;
+//     // iMouseY = iScreenHeight - my;
+//     // iMouseMove(iMouseX, iMouseY);
+
+//     glutSwapBuffers();
+// }
+
+void mouseClick(int button, int state, int x, int y)
+{
+    // iMouseX = x;
+    // iMouseY = iScreenHeight - y;
+    // iMouseClick(button, state, iMouseX, iMouseY);
+    if (button == 3)
+    {
+        camera.moveForward();
+    }
+    else if (button == 4)
+    {
+        camera.moveBackward();
+    }
+
+    glutPostRedisplay();
+    // glutSwapBuffers();
+}
+// void mouseScroll(int button, int dir, int x, int y)
+// {
+//     // iMouseScroll(dir);
+
+//     // glutPostRedisplay();
+// }
+
 int main(int argc, char **argv)
 {
+    glutInit(&argc, argv); // Initialize GLUT // Without this : Other glut functions can't be called .
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowPosition(500, 0);                // Position the window's initial top-left corner
+    glutInitWindowSize(WindowWidth, WindowHeight); // Set the window's initial width & height // Default value : 300,300
+    glutCreateWindow("First Program");             // Create a window with the given tit le	// Without this : ERROR:  glutMainLoop called with no windows created.
+    glutDisplayFunc(display);                      // Register display callback handler for window re-paint  // Without this: ERROR:  No display callback registered for window 1
+    glutReshapeFunc(resize);
 
-    glutInit(&argc, argv);                                    // Initialize GLUT
-    glutInitWindowSize(840, 840);                             // Set the window's initial width & height
-    glutInitWindowPosition(50, 50);                           // Position the window's initial top-left corner
-    glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB); // Depth, Double buffer, RGB color
-    glutCreateWindow("Magic Cube by Tamim U w U");            // Create a window with the given title
-    glutDisplayFunc(display);                                 // Register display callback handler for window re-paint
-    glutReshapeFunc(reshapeListener);                         // Register callback handler for window re-shape
-    glutKeyboardFunc(keyboardListener);                       // Register callback handler for normal-key event
-    glutSpecialFunc(specialKeyListener);                      // Register callback handler for special-key event
-    initGL();                                                 // Our own OpenGL initialization
-    glutMainLoop();                                           // Enter the event-processing loop
+    // Input handlers
+    glutKeyboardFunc(key);
+    glutSpecialFunc(specialkey); // special keys
+    glutMouseFunc(mouseClick);
+    // glutMotionFunc(mouseDrag);
+    // glutPassiveMotionFunc(mouseMove);
+    // glutMouseWheelFunc(mouseScroll);
+
+    glutTimerFunc(10, update, 10);
+    // glMatrixMode(GL_MODELVIEW);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(
+        60, // fov
+        // 1920/1080.0, // aspect
+        1,
+        1,
+        200);
+
+    // gluPerspective(80,	1,	1,	1000.0);
+
+    // glOrtho(-WindowWidth / 2, WindowWidth / 2, -WindowHeight / 2, WindowHeight / 2, -WindowWidth / 2, WindowWidth / 2);
+
+    // GLfloat mat_specular[] = {1.0, 1.0, 1.0};
+    // GLfloat mat_shininess[] = {50.0};
+    // GLfloat light_position[] = {1.0, 1.0, 1.0, 0.0};
+    // glClearColor(0, 0, 0, 0);
+    // glShadeModel(GL_SMOOTH);
+    // glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
+    // glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+    // glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+    // glEnable(GL_COLOR_MATERIAL);
+    // glEnable(GL_LIGHTING);
+    // glEnable(GL_LIGHT0);
+    // glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_LINE_SMOOTH);
+
+    glEnable(GL_DEPTH_TEST); // je object kache setake rakhe
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glLineWidth(1.0);
+    glEnable(GL_LINE_SMOOTH);
+    init();
+    // glutFullScreen();
+    // glutSetCursor(GLUT_CURSOR_NONE);
+    glutMainLoop(); // Enter the event-processing loop
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "Ball.hpp"
+#include "Headers.hpp"
 
 Ball::Ball(double radius, int slices, int stacks)
 {

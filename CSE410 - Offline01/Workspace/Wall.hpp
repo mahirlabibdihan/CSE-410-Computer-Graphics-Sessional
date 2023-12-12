@@ -2,7 +2,9 @@
 #ifndef _WALL_H
 #define _WALL_H
 
-#include "Headers.hpp"
+#include "Vec3.hpp"
+#include <vector>
+using namespace std;
 
 class Wall
 {

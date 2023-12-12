@@ -1,6 +1,6 @@
 #ifndef _D_GRAPHICS_H
 #define _D_GRAPHICS_H
-#include "Headers.hpp"
+#include "OpenGL.hpp"
 class DGraphics
 {
     static GLint WindowHeight, WindowWidth;

@@ -1,7 +1,9 @@
 #ifndef _BALL_H
 #define _BALL_H
 
-#include "Headers.hpp"
+#include "CollisionManager.hpp"
+#include "Ball.hpp"
+#include "Vec3.hpp"
 
 class CollisionManager;
 class Ball

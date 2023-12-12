@@ -1,7 +1,7 @@
 #ifndef _COLLISION_MANAGER_H
 #define _COLLISION_MANAGER_H
-#include "Headers.hpp"
-
+#include "Ball.hpp"
+#include "Wall.hpp"
 class Ball;
 class CollisionManager
 {

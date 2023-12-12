@@ -1,4 +1,5 @@
 #include "CollisionManager.hpp"
+#include "Headers.hpp"
 
 CollisionManager::CollisionManager(Ball *ball, Wall *wall) : ball(ball), wall(wall)
 {
@@ -16,44 +17,31 @@ double CollisionManager::getNearestWall(bool back)
     int idx = -1;
     for (int i = 0; i < wall->n_sides; i++)
     {
-        printf("Here\n");
         Vec3 tmp_look = ball->look * (back ? -1 : 1);
         Vec3 A = wall->vertex[i];
         Vec3 B = wall->vertex[(i + 1) % wall->n_sides];
         Vec3 C = ball->pos;
-        Vec3 D = ball->pos + (tmp_look * 100);
+        Vec3 D = ball->pos + ball->look;
+        Vec3 dir = B - A;
+        double theta = acos(dot2D(dir, tmp_look) / (det2D(dir) * det2D(tmp_look)));
 
-        // if (intersect(A, B, C, D))
+        Vec3 I = findIntersectionInf(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
+        if (isnanf(I.x) || isnanf(I.y))
         {
-            Vec3 dir = B - A;
+            continue;
+        }
 
-            double theta = acos(dot2D(dir, tmp_look) / (det2D(dir) * det2D(tmp_look)));
+        Vec3 tmp = I - C;
 
-            // printf("Wall: %d, Theta: %lf\n", i, theta * 180 / PI);
-
-            Vec3 I = findIntersectionInf(A.x, A.y, B.x, B.y, C.x, C.y, D.x, D.y);
-            // printPT(I);
-            if (isnanf(I.x) || isnanf(I.y))
+        double check_theta = acos(min(max(dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)), -1.0), 1.0));
+        if (floor(check_theta) == 0 || back)
+        {
+            double distance = distancePointToPoint(C, I);
+            double minus = ball->radius / sin(theta);
+            if (dist > distance - minus)
             {
-                continue;
-            }
-
-            Vec3 tmp = I - C;
-
-            // printPT(ball->look);
-            // printPT(tmp);
-            double check_theta = acos(min(max(dot2D(tmp, tmp_look) / (det2D(tmp) * det2D(tmp_look)), -1.0), 1.0));
-
-            // printf("Check: %lf %d\n", check_theta, std::fabs(check_theta) < 1e-9);
-            if (floor(check_theta) == 0 || back)
-            {
-                double distance = distancePointToPoint(C, I);
-                double minus = ball->radius / sin(theta);
-                if (dist > distance - minus)
-                {
-                    idx = i;
-                    dist = distance - minus;
-                }
+                idx = i;
+                dist = distance - minus;
             }
         }
     }
@@ -62,8 +50,6 @@ double CollisionManager::getNearestWall(bool back)
 
 void CollisionManager::handleCollision(bool back)
 {
-    // printf("==============================Collision=================================\n");
-    // int n = 4;
 
     int i = getNearestWall(back);
     // for (int i = 0; i < n; i++)
@@ -173,6 +159,7 @@ bool CollisionManager::check()
     {
         predictCollision();
         nearest_wall = getNearestWall(false);
+
         return true;
     }
     return false;

@@ -1,5 +1,5 @@
 #include "DGraphics.hpp"
-
+#include "Headers.hpp"
 GLint DGraphics::WindowHeight = 600;
 GLint DGraphics::WindowWidth = 600;
 

@@ -1,5 +1,5 @@
 #include "Wall.hpp"
-
+#include "Headers.hpp"
 Wall::Wall()
 {
 }

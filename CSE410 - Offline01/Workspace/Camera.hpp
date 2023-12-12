@@ -1,26 +1,32 @@
-#include "Point.hpp"
+#include "Vec3.hpp"
 #include <math.h>
 #include "GLM.hpp"
 class Camera
 {
 public:
-    PT pos, up, right, look;
+    Vec3 pos, up, right, look;
     Camera()
     {
         init();
     }
     void init()
     {
-        pos = PT(10, 10, 10);
-        up = PT(-1 / sqrt(3), -1 / sqrt(3), 1 / sqrt(3));
-        right = PT(-1 / sqrt(2), 1 / sqrt(2), 0);
-        look = PT(-1 / sqrt(3), -1 / sqrt(3), -1 / sqrt(3));
+        pos = Vec3(10, 10, 10);
+        up = Vec3(-1 / sqrt(3), -1 / sqrt(3), 1 / sqrt(3));
+        right = Vec3(-1 / sqrt(2), 1 / sqrt(2), 0);
+        look = Vec3(-1 / sqrt(3), -1 / sqrt(3), -1 / sqrt(3));
+        // pos = Vec3(10, 0, 10);
+        // look = Vec3(-1 / sqrt(2), 0, -1 / sqrt(2));
+        // right = Vec3(0, 1, 0);
+        // up = Vec3(-1 / sqrt(2), 0, 1 / sqrt(2));
     }
     void setCamera()
     {
-        gluLookAt(pos.x, pos.y, pos.z,
-                  pos.x + look.x, pos.y + look.y, pos.z + look.z,
-                  up.x, up.y, up.z);
+        gluLookAt(
+            pos.x, pos.y, pos.z,
+            // 11, 11, 11,
+            pos.x + look.x, pos.y + look.y, pos.z + look.z,
+            up.x, up.y, up.z);
     }
     void rotateAroundUp(double radian)
     {
@@ -87,14 +93,14 @@ public:
     }
     void moveAroundRef(int dir)
     {
-        PT center = findReference(pos, look);
+        Vec3 center = findReference(pos, look);
         double old_dist = distancePointToPoint(center, pos);
-        PT old_pos = pos;
+        Vec3 old_pos = pos;
         pos.z = pos.z + dir * .5;
-        PT new_pos = pos;
+        Vec3 new_pos = pos;
         double new_dist = distancePointToPoint(center, pos);
         double ang = angleBetweenVectors(old_pos - center, new_pos - center);
-        PT axis = findPerpendicularVector(look);
+        Vec3 axis = findPerpendicularVector(look);
         rotate3D(look, axis, dir * ang);
         up = right * look;
         right = look * up;
@@ -106,5 +112,29 @@ public:
     void moveDownRef()
     {
         moveAroundRef(-1);
+    }
+    void draw()
+    {
+        // glPushMatrix();
+        // // Direction arrow
+        // glPushMatrix();
+        // glTranslatef(pos.x, pos.y, pos.z);
+        // // glRotatef(fmod((atan2(look.y, look.x) * 180 / M_PI) + 360.0, 360.0), right.x, right.y, right.z);
+        // // glRotatef(90, 0, 1, 0);
+        // glColor3f(0.0, 0.0, 1.0); // Red color for the cylinder
+        // // drawArrow(1.0);
+        // glBegin(GL_LINES);
+        // glVertex3f(0, 0, 0);
+        // glVertex3f(look.x, look.y, look.z);
+        // glEnd();
+        // glPopMatrix();
+
+        // // glPushMatrix();
+        // // glTranslatef(pos.x, pos.y, pos.z);
+        // // glRotatef(fmod((atan2(look.y, look.x) * 180 / M_PI) + 360.0, 360.0), up.x, up.y, up.z);
+        // // glRotatef(90, 0, 1, 0);
+        // // glColor3f(0.0, 0.0, 1.0); // Red color for the cylinder
+        // // drawArrow(1.0);
+        // glPopMatrix();
     }
 };

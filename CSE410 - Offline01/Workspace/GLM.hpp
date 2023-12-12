@@ -1,8 +1,6 @@
 #ifndef _GLM_H
 #define _GLM_H
-#include "Vec3.hpp"
-#include <cmath>
-using namespace std;
+#include "Headers.hpp"
 
 void rotate3D(Vec3 &vec, Vec3 &axis, double ang);
 double radians(double degrees);

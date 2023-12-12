@@ -1,6 +1,5 @@
 #include "Ball.hpp"
-#include "CollisionManager.hpp"
-#include "DGraphics.hpp"
+
 Ball::Ball(double radius, int slices, int stacks)
 {
     this->radius = radius;

@@ -1,5 +1,4 @@
 #include "CollisionManager.hpp"
-#include "Ball.hpp"
 
 CollisionManager::CollisionManager(Ball *ball, Wall *wall) : ball(ball), wall(wall)
 {

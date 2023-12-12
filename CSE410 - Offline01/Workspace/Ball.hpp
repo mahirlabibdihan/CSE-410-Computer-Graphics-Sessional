@@ -1,19 +1,7 @@
 #ifndef _BALL_H
 #define _BALL_H
 
-#ifdef __linux__
-#include <GL/glut.h>
-#include <GL/freeglut_ext.h>
-#elif WIN32
-#include <windows.h>
-#include <glut.h>
-#endif
-
-#include "Vec3.hpp"
-#include "GLM.hpp"
-#include <cmath>
-// #include "CollisionManager.hpp"
-using namespace std;
+#include "Headers.hpp"
 
 class CollisionManager;
 class Ball

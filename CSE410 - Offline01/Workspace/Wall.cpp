@@ -1,6 +1,5 @@
 #include "Wall.hpp"
-#include <iostream>
-using namespace std;
+
 Wall::Wall()
 {
 }

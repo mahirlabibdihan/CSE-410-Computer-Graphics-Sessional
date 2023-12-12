@@ -2,18 +2,7 @@
 #ifndef _WALL_H
 #define _WALL_H
 
-#ifdef __linux__
-#include <GL/glut.h>
-#elif WIN32
-#include <windows.h>
-#include <glut.h>
-#endif
-
-#include "Vec3.hpp"
-#include <vector>
-#include <cmath>
-#include "GLM.hpp"
-using namespace std;
+#include "Headers.hpp"
 
 class Wall
 {

@@ -1,6 +1,5 @@
-#include "Vec3.hpp"
-#include <math.h>
-#include "GLM.hpp"
+#include "Headers.hpp"
+
 class Camera
 {
 public:

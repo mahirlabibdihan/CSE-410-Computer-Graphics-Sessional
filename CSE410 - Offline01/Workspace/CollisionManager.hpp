@@ -1,11 +1,6 @@
 #ifndef _COLLISION_MANAGER_H
 #define _COLLISION_MANAGER_H
-// #include "Ball.hpp"
-#include "Wall.hpp"
-#include "Vec3.hpp"
-#include "GLM.hpp"
-#include <iostream>
-using namespace std;
+#include "Headers.hpp"
 
 class Ball;
 class CollisionManager

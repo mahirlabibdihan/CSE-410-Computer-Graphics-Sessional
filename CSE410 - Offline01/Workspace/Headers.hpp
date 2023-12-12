@@ -10,3 +10,6 @@
 #include "CollisionManager.hpp"
 #include "Ball.hpp"
 #include "Wall.hpp"
+#include "GLM.hpp"
+#include "Vec3.hpp"
+#include "DGraphics.hpp"

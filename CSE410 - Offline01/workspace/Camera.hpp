@@ -1,17 +1,15 @@
 #ifndef _CAMERA_H
 #define _CAMERA_H
-#include "Vec3.hpp"
+#include "Vec3D.hpp"
 
 class Camera
 {
+    Vec3D pos, up, right, look;
+
 public:
-    Vec3 pos;
-    Vec3 up;
-    Vec3 right;
-    Vec3 look;
     Camera();
-    void init();
-    void setCamera();
+    void init(Vec3D p, Vec3D u, Vec3D r, Vec3D l);
+    void set();
     void rotateAroundUp(double radian);
     void rotateLeft();
     void rotateRight();

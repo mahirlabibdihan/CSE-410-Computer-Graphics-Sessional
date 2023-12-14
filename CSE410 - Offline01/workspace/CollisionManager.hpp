@@ -11,11 +11,12 @@ public:
     int nearest_wall;
     CollisionManager(Ball *ball, Wall *wall);
     void init();
-    double getNearestWall(bool back);
-    void handleCollision(bool back);
-    void predictCollision();
-    double getMinDistance(int nearest_wall, bool back);
-    bool checkCollision(bool back);
+    double getNearestWall();
+    void setNearestWall();
+    void handleCollision();
+    double ballToWallDistance(Vec2D ball_p, Vec2D ball_d, Vec2D wall_p, Vec2D wall_d);
+    double getMinDistance();
+    bool checkCollision();
     bool check();
 };
 #endif

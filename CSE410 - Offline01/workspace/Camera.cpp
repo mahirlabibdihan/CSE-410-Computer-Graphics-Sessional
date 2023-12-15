@@ -10,6 +10,8 @@ void Camera::init(Vec3D p, Vec3D u, Vec3D r, Vec3D l)
     up = u;
     right = r;
     look = l;
+    focal_length = pos.magnitude();
+
     // pos = Vec3D(10, 0, 10);
     // look = Vec3D(-1 / sqrt(2), 0, -1 / sqrt(2));
     // right = Vec3D(0, 1, 0);
@@ -88,30 +90,22 @@ void Camera::moveDown()
 }
 void Camera::moveAroundRef(int dir)
 {
-    Vec3D center = findReference(pos, look);
-    double old_dist = distancePointToPoint3D(center, pos);
-    Vec3D old_pos = pos;
+    // double focal_length = pos.magnitude();
 
-    if (pos.z == -dir * .1)
-    {
-        pos.z = pos.z + dir * .11;
-    }
-    else
-    {
-        pos.z = pos.z + dir * .1;
-    }
+    Vec3D C = pos + look * focal_length;
 
-    Vec3D new_pos = pos;
-    double new_dist = distancePointToPoint3D(center, pos);
-    double ang = (old_pos - center).angle(new_pos - center);
+    Vec3D A = pos;
+    pos.z += dir * .5;
 
-    // cout << center << endl;
-    // cout << new_dist << endl;
-    Vec3D axis = findPerpendicularVector(look); // On XY plane
+    Vec3D B = pos;
+    Vec3D normalVector = (A - C) * (B - C);
 
-    look = look.perpRotate(axis, dir * ang);
+    double ang = (A - C).angle(B - C);
+    look = look.perpRotate(normalVector, ang);
     up = right * look;
     right = look * up;
+
+    focal_length = distancePointToPoint3D(pos, C);
 }
 void Camera::moveUpRef()
 {
@@ -120,4 +114,16 @@ void Camera::moveUpRef()
 void Camera::moveDownRef()
 {
     moveAroundRef(-1);
+}
+
+void Camera::drawReference()
+{
+    // double focal_length = pos.magnitude();
+    Vec3D C = pos + look * focal_length;
+
+    glPushMatrix();
+    glTranslatef(C.x, C.y, C.z);
+    glScalef(0.5, 0.5, 0.5);
+    DGraphics::drawAxis();
+    glPopMatrix();
 }

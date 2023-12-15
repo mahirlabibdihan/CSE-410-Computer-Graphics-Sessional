@@ -1,6 +1,6 @@
 #include "Headers.hpp"
 
-Camera camera;
+Camera *camera = new Camera();
 
 double maxTriangleVertex = 1.6;
 double triangleVertex = 1.6;
@@ -185,24 +185,33 @@ void drawSpheres()
 
 void DGraphics::display()
 {
-    camera.set();
+    camera->set();
     // Clear all pixels
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glPushMatrix();
     glRotatef(angleRotationZ, 0, 0, 1);
     drawPyramids();
     drawCylinders();
     drawSpheres();
+    glPopMatrix();
+
+    // camera->drawReference();
+
+    // glPushMatrix();
+    // glScalef(5, 5, 5);
+    // DGraphics::drawAxis();
+    // glPopMatrix();
 }
 
 void DGraphics::init()
 {
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    Vec3D pos = Vec3D(4, 0, 2.5);
+    Vec3D pos = Vec3D(5.5, 0, 4);
     Vec3D right = Vec3D(0, 1, 0);
     Vec3D up = Vec3D(-1 / sqrt(2), 0, 1 / sqrt(2)).rotate(right, radians(15));
     Vec3D look = Vec3D(-1 / sqrt(2), 0, -1 / sqrt(2)).rotate(right, radians(15));
-    camera.init(pos, up, right, look);
+    camera->init(pos, up, right, look);
 }
 
 void DGraphics::keyboard(unsigned char key)
@@ -210,28 +219,28 @@ void DGraphics::keyboard(unsigned char key)
     switch (key)
     {
     case '1':
-        camera.rotateLeft();
+        camera->rotateLeft();
         break;
     case '2':
-        camera.rotateRight();
+        camera->rotateRight();
         break;
     case '3':
-        camera.rotateUp();
+        camera->rotateUp();
         break;
     case '4':
-        camera.rotateDown();
+        camera->rotateDown();
         break;
     case '5':
-        camera.tiltClock();
+        camera->tiltClock();
         break;
     case '6':
-        camera.tiltCounterClock();
+        camera->tiltCounterClock();
         break;
     case 'w':
-        camera.moveUpRef();
+        camera->moveUpRef();
         break;
     case 's':
-        camera.moveDownRef();
+        camera->moveDownRef();
         break;
 
     case 'd':
@@ -267,25 +276,25 @@ void DGraphics::specialKeyboard(int key)
     switch (key)
     {
     case GLUT_KEY_UP:
-        camera.moveForward();
+        camera->moveForward();
         break;
     case GLUT_KEY_DOWN:
-        camera.moveBackward();
+        camera->moveBackward();
         break;
 
     case GLUT_KEY_RIGHT:
-        camera.moveRight();
+        camera->moveRight();
         break;
 
     case GLUT_KEY_LEFT:
-        camera.moveLeft();
+        camera->moveLeft();
         break;
 
     case GLUT_KEY_PAGE_UP:
-        camera.moveUp();
+        camera->moveUp();
         break;
     case GLUT_KEY_PAGE_DOWN:
-        camera.moveDown();
+        camera->moveDown();
         break;
 
     default:
@@ -297,17 +306,17 @@ void DGraphics::mouseScroll(int dir)
 {
     if (dir == 1)
     {
-        camera.moveForward();
+        camera->moveForward();
     }
     else if (dir == -1)
     {
-        camera.moveBackward();
+        camera->moveBackward();
     }
 }
 int main(int argc, char **argv)
 {
     glutInit(&argc, argv); // Initialize GLUT // Without this : Other glut functions can't be called .
-    DGraphics::initialize(600, 600, "Magic Cube");
+    DGraphics::initialize(640, 640, "Magic Cube");
     glutMainLoop(); // Enter the event-processing loop
     return 0;
 }

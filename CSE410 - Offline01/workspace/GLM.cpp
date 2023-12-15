@@ -82,19 +82,20 @@ double degrees(double radians)
     return radians * 180 / M_PI;
 }
 
-Vec3D findReference(Vec3D point, Vec3D normalizedVector)
+Vec3D findReference(Vec3D p, Vec3D v)
 {
     // The equation of the XY plane is z = 0
     // To find the intersection point, set z to 0 in the equation of the line
-    double t = -point.z / normalizedVector.z;
+    // 0.0 = p.z + t * v.y;
+    double t = -p.z / v.z;
 
     // Calculate the intersection point
-    Vec3D intersectionPoint;
-    intersectionPoint.x = point.x + t * normalizedVector.x;
-    intersectionPoint.y = point.y + t * normalizedVector.y;
-    intersectionPoint.z = 0.0; // Intersection point lies on the XY plane
+    Vec3D intersection;
+    intersection.x = p.x + t * v.x;
+    intersection.y = p.y + t * v.y;
+    intersection.z = 0.0; // Intersection point lies on the XY plane
 
-    return intersectionPoint;
+    return intersection;
 }
 double distancePointToPoint2D(Vec2D a, Vec2D b)
 {

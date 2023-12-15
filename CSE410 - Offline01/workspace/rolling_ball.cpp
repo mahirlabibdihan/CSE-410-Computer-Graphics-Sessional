@@ -34,6 +34,7 @@ void DGraphics::display()
     drawCheckerboard();
     wall->draw();
     ball->draw();
+    // camera->drawReference();
 }
 
 void DGraphics::init()

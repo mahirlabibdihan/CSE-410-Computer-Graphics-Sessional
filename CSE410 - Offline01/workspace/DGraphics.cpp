@@ -57,17 +57,25 @@ void DGraphics::drawSquare(double a)
 
 void DGraphics::drawAxis()
 {
+    glPushMatrix();
+    glColor3f(1, 0, 0);
     glBegin(GL_LINES);
-    {
-        glColor3f(1.0f, 1.0f, 1.0f);
-        glVertex3f(5, 0, 0);
-        glVertex3f(-5, 0, 0);
-        glVertex3f(0.0f, 5, 0);
-        glVertex3f(0.0f, -5, 0);
-        glVertex3f(0.0f, 0, 5);
-        glVertex3f(0.0f, 0, -5);
-    }
+    glVertex3f(1, 0, 0);
+    glVertex3f(-1, 0, 0);
     glEnd();
+
+    glColor3f(0, 1, 0);
+    glBegin(GL_LINES);
+    glVertex3f(0, 1, 0);
+    glVertex3f(0, -1, 0);
+    glEnd();
+
+    glColor3f(0, 0, 1);
+    glBegin(GL_LINES);
+    glVertex3f(0, 0, 1);
+    glVertex3f(0, 0, -1);
+    glEnd();
+    glPopMatrix();
 }
 void DGraphics::drawCube()
 {
@@ -189,9 +197,9 @@ void DGraphics::resize(int w, int h)
     WindowHeight = h;
 
     gluPerspective(
-        60,          // fov
+        45,          // fov
         1.0 * w / h, // aspect
-        1,
+        0.1,
         200);
 
     glMatrixMode(GL_MODELVIEW);

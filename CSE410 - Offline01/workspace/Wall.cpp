@@ -13,7 +13,7 @@ void Wall::init(int n = 4)
 }
 void Wall::draw()
 {
-    glDisable(GL_DEPTH_TEST); // je object kache setake rakhe
+    // glDisable(GL_DEPTH_TEST); // je object kache setake rakhe
     glPushMatrix();
     {
         glColor4f(1, 0, 0, 0.7);
@@ -41,7 +41,7 @@ void Wall::draw()
         }
     }
     glPopMatrix();
-    glEnable(GL_DEPTH_TEST); // je object kache setake rakhe
+    // glEnable(GL_DEPTH_TEST); // je object kache setake rakhe
 }
 
 vector<Vec2D> Wall::generateCorners()

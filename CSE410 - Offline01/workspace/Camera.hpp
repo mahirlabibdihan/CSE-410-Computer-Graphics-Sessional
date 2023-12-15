@@ -5,6 +5,7 @@
 class Camera
 {
     Vec3D pos, up, right, look;
+    double focal_length;
 
 public:
     Camera();
@@ -28,5 +29,6 @@ public:
     void moveAroundRef(int dir);
     void moveUpRef();
     void moveDownRef();
+    void drawReference();
 };
 #endif

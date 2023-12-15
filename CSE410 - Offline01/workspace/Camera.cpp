@@ -102,7 +102,9 @@ void Camera::moveAroundRef(int dir)
 
     double ang = (A - C).angle(B - C);
     look = look.perpRotate(normalVector, ang);
-    up = right * look;
+
+    // up = up.perpRotate(normalVector, ang);
+    up = right * look; // Not sure
     right = look * up;
 
     focal_length = distancePointToPoint3D(pos, C);

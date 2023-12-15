@@ -114,7 +114,7 @@ void drawCylinders()
     }
 }
 
-void drawSphereQuad(double radius, int segments)
+void drawSpherePart(double radius, int segments)
 {
     struct Vec3D points[segments + 1][segments + 1];
     int i, j;
@@ -164,7 +164,7 @@ void drawSpheres()
             glColor3f(0, i % 2, (i + 1) % 2); // blue / green
             glRotatef(90 * i, 0, 1, 0);
             glTranslatef(0, 0, triangleVertex);
-            drawSphereQuad(radius, 10);
+            drawSpherePart(radius, 10);
         }
         glPopMatrix();
     }
@@ -177,7 +177,7 @@ void drawSpheres()
             glColor3f(1.0f, 0.0f, 0.0f); // red
             glRotatef(90 + 180 * i, 1, 0, 0);
             glTranslatef(0, 0, triangleVertex);
-            drawSphereQuad(radius, 10);
+            drawSpherePart(radius, 10);
         }
         glPopMatrix();
     }
@@ -196,7 +196,7 @@ void DGraphics::display()
     drawSpheres();
     glPopMatrix();
 
-    // camera->drawReference();
+    camera->drawReference();
 
     // glPushMatrix();
     // glScalef(5, 5, 5);

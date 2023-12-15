@@ -32,8 +32,9 @@ void DGraphics::display()
 {
     camera->set();
     drawCheckerboard();
-    wall->draw();
+
     ball->draw();
+    wall->draw();
     // camera->drawReference();
 }
 

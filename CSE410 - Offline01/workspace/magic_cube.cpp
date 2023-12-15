@@ -196,7 +196,7 @@ void DGraphics::display()
     drawSpheres();
     glPopMatrix();
 
-    camera->drawReference();
+    // camera->drawReference();
 
     // glPushMatrix();
     // glScalef(5, 5, 5);

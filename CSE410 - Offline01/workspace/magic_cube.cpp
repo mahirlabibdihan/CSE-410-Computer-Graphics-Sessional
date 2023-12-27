@@ -2,200 +2,189 @@
 
 Camera *camera = new Camera();
 
-double maxTriangleVertex = 1.6;
-double triangleVertex = 1.6;
-
-void drawTriangle()
+class MagicCube
 {
-    // glColor3f(1.0,0.0,0.0);
-    glBegin(GL_TRIANGLES);
-    {
-        glVertex3f(1, 0, 0);
-        glVertex3f(0, 1, 0);
-        glVertex3f(0, 0, 1);
-    }
-    glEnd();
-}
+    double maxTriangleCoord = 1.6;
+    double triangleCoord = 1.6;
+    double angle = 45.0;
 
-void drawPyramids()
-{
-    for (int i = 0; i < 4; i++)
+public:
+    void drawTriangle()
     {
-        glPushMatrix();
-        glColor3f((i + 1) % 2, i % 2, 1.0f);
-        glRotatef(90 * i, 0, 0, 1);
-        glTranslatef(maxTriangleVertex / 3.0, maxTriangleVertex / 3.0, maxTriangleVertex / 3.0);
-        glScaled(triangleVertex, triangleVertex, triangleVertex);
-        glPushMatrix();
+        glBegin(GL_TRIANGLES);
         {
-            glTranslatef(-1 / 3.0, -1 / 3.0, -1 / 3.0);
-            drawTriangle();
+            glVertex3f(1, 0, 0);
+            glVertex3f(0, 1, 0);
+            glVertex3f(0, 0, 1);
         }
-        glPopMatrix();
-        glPopMatrix();
+        glEnd();
     }
 
-    for (int i = 0; i < 4; i++)
+    void drawFaces()
     {
-        glPushMatrix();
+        for (int j = 0; j < 2; j++)
         {
-            glColor3f(i % 2, (i + 1) % 2, 1.0f);
-            glRotatef(90 * i, 0, 0, 1);
-            glRotatef(180, 1, 1, 0);
-            glTranslatef(maxTriangleVertex / 3.0, maxTriangleVertex / 3.0, maxTriangleVertex / 3.0);
-            glScaled(triangleVertex, triangleVertex, triangleVertex);
-            glPushMatrix();
+            for (int i = 0; i < 4; i++)
             {
+                glPushMatrix();
+                glColor3f((i + 1 - j) % 2, (i + j) % 2, 1.0f);
+                glRotatef(90 * i, 0, 0, 1);
+                glRotatef((j - 1) * 180, 1, 1, 0);
+                glTranslatef(maxTriangleCoord / 3.0, maxTriangleCoord / 3.0, maxTriangleCoord / 3.0);
+                glScalef(triangleCoord, triangleCoord, triangleCoord);
                 glTranslatef(-1 / 3.0, -1 / 3.0, -1 / 3.0);
                 drawTriangle();
+                glPopMatrix();
             }
-            glPopMatrix();
-        }
-        glPopMatrix();
-    }
-}
-
-void drawCylinderPart(double radius, double height, int segments = 100)
-{
-    struct Vec3D points[segments + 1];
-
-    double offset = radians(70.5287794);
-
-    for (int i = 0; i <= segments; i++)
-    {
-        double theta = (0 - offset) / 2 + offset * (1.0 * i / segments);
-        points[i].x = radius * cos(theta);
-        points[i].y = radius * sin(theta);
-    }
-
-    glBegin(GL_QUADS);
-    for (int i = 0; i < segments; i++)
-    {
-        glVertex3f(points[i].x, points[i].y, height / 2);
-        glVertex3f(points[i].x, points[i].y, -height / 2);
-        glVertex3f(points[i + 1].x, points[i + 1].y, -height / 2);
-        glVertex3f(points[i + 1].x, points[i + 1].y, height / 2);
-    }
-    glEnd();
-}
-
-void drawCylinders()
-{
-    glColor3f(1.0f, 1.0f, 0.0f);
-    double diff = maxTriangleVertex - triangleVertex;
-    double radius = (diff / sqrt(2)) * cos(radians(70.5287794 / 2));
-    // Each side of triangle has length = triangleVertex * sqrt(2)
-    for (int i = 0; i < 4; i++)
-    {
-        glPushMatrix();
-        glRotatef((45 + i * 90), 0, 1, 0);
-        glTranslatef(triangleVertex / sqrt(2), 0, 0);
-        drawCylinderPart(radius, triangleVertex * sqrt(2));
-        glPopMatrix();
-    }
-
-    for (int i = 0; i < 4; i++)
-    {
-        glPushMatrix();
-        glRotatef(90, 1, 0, 0);
-        glRotatef((45 + i * 90), 0, 1, 0);
-        glTranslatef(triangleVertex / sqrt(2), 0, 0);
-        drawCylinderPart(radius, triangleVertex * sqrt(2));
-        glPopMatrix();
-    }
-    for (int i = 0; i < 4; i++)
-    {
-        glPushMatrix();
-        glRotatef(90, 0, 0, 1);
-        glRotatef((45 + i * 90), 0, 1, 0);
-        glTranslatef(triangleVertex / sqrt(2), 0, 0);
-        drawCylinderPart(radius, triangleVertex * sqrt(2));
-        glPopMatrix();
-    }
-}
-
-void drawSpherePart(double radius, int segments)
-{
-    struct Vec3D points[segments + 1][segments + 1];
-    int i, j;
-    double x, y;
-    // generate points
-    for (i = 0; i <= segments; i++)
-    {
-        for (j = 0; j <= segments; j++)
-        {
-            // Create square from (-1,-1,1) to (1,1,1)
-            points[i][j].x = -1 + (double)i / segments * 2;
-            points[i][j].y = -1 + (double)j / segments * 2;
-            points[i][j].z = 1;
-
-            // Then normalize the radius vectors
-            points[i][j] = points[i][j].normalize();
-            points[i][j] = points[i][j] * radius;
         }
     }
-    // draw quads using generated points
-    for (i = 0; i < segments; i++)
+
+    void drawCylinderSegment(double radius, double height, int n_segments = 100)
     {
-        for (j = 0; j < segments; j++)
+        vector<Vec2D> vertices;
+
+        double arcAngle = radians(70.5287794);
+
+        double x, y;
+        for (int i = 0; i <= n_segments; i++)
         {
-            glBegin(GL_QUADS);
+            double radian = (0 - arcAngle) / 2 + arcAngle * (1.0 * i / n_segments);
+            x = radius * cos(radian);
+            y = radius * sin(radian);
+            vertices.push_back({x, y});
+        }
+
+        glBegin(GL_QUADS);
+        for (int i = 0; i < n_segments; i++)
+        {
+            glVertex3f(vertices[i].x, vertices[i].y, height / 2);
+            glVertex3f(vertices[i + 1].x, vertices[i + 1].y, height / 2);
+            glVertex3f(vertices[i + 1].x, vertices[i + 1].y, -height / 2);
+            glVertex3f(vertices[i].x, vertices[i].y, -height / 2);
+        }
+        glEnd();
+    }
+
+    void drawEdges()
+    {
+        glColor3f(1.0f, 1.0f, 0.0f);
+        double diff = maxTriangleCoord - triangleCoord;
+        double radius = (diff / sqrt(2)) * cos(radians(70.5287794 / 2));
+        // Each side of triangle has length = triangleCoord * sqrt(2)
+        double height = triangleCoord * sqrt(2);
+        double distToCenter = triangleCoord / sqrt(2);
+
+        for (int j = 0; j < 3; j++)
+        {
+            for (int i = 0; i < 4; i++)
             {
-                glVertex3f(points[i][j].x, points[i][j].y, points[i][j].z);
-                glVertex3f(points[i][j + 1].x, points[i][j + 1].y, points[i][j + 1].z);
-                glVertex3f(points[i + 1][j + 1].x, points[i + 1][j + 1].y, points[i + 1][j + 1].z);
-                glVertex3f(points[i + 1][j].x, points[i + 1][j].y, points[i + 1][j].z);
+                glPushMatrix();
+                glRotatef(90, j == 0, j == 1, j == 2);
+                glRotatef((45 + i * 90), 0, 1, 0);
+                glTranslatef(distToCenter, 0, 0);
+                drawCylinderSegment(radius, height);
+                glPopMatrix();
             }
-            glEnd();
         }
     }
-}
 
-double angleRotationZ = 45.0;
+    void drawSphereSegment(double radius, int n_segments)
+    {
+        vector<vector<Vec3D>> vertices;
 
-void drawSpheres()
-{
-    double diff = maxTriangleVertex - triangleVertex;
-    double radius = (diff / sqrt(2)) * cos(radians(70.5287794 / 2));
-    for (int i = 0; i < 4; i++)
+        double x, y, z;
+        for (int i = 0; i <= n_segments; i++)
+        {
+            vertices.push_back(vector<Vec3D>());
+            for (int j = 0; j <= n_segments; j++)
+            {
+                x = -1 + 2.0 * i / n_segments;
+                y = -1 + 2.0 * j / n_segments;
+                vertices[i].push_back({x, y, 1});
+                vertices[i][j] = vertices[i][j].normalize() * radius;
+            }
+        }
+
+        for (int i = 0; i < n_segments; i++)
+        {
+            for (int j = 0; j < n_segments; j++)
+            {
+                glBegin(GL_QUADS);
+                {
+                    glVertex3f(vertices[i][j].x, vertices[i][j].y, vertices[i][j].z);
+                    glVertex3f(vertices[i][j + 1].x, vertices[i][j + 1].y, vertices[i][j + 1].z);
+                    glVertex3f(vertices[i + 1][j + 1].x, vertices[i + 1][j + 1].y, vertices[i + 1][j + 1].z);
+                    glVertex3f(vertices[i + 1][j].x, vertices[i + 1][j].y, vertices[i + 1][j].z);
+                }
+                glEnd();
+            }
+        }
+    }
+
+    void drawVertices()
+    {
+        double diff = maxTriangleCoord - triangleCoord;
+        double radius = (diff / sqrt(2)) * cos(radians(70.5287794 / 2));
+
+        for (int j = 0; j < 3; j++)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                glPushMatrix();
+                {
+                    glColor3f(j == 2, j == 1, j == 0);
+                    glRotatef(90, j == 0, j == 1, j == 2);
+                    glRotatef(180 * i, 0, 1, 0);
+                    glTranslatef(0, 0, triangleCoord);
+                    drawSphereSegment(radius, 10);
+                }
+                glPopMatrix();
+            }
+        }
+    }
+    void draw()
     {
         glPushMatrix();
-        {
-            glColor3f(0, i % 2, (i + 1) % 2); // blue / green
-            glRotatef(90 * i, 0, 1, 0);
-            glTranslatef(0, 0, triangleVertex);
-            drawSpherePart(radius, 10);
-        }
+        glRotatef(angle, 0, 0, 1);
+        drawFaces();
+        drawEdges();
+        drawVertices();
         glPopMatrix();
     }
-
-    for (int i = 0; i < 2; i++)
+    void rotateClock()
     {
-
-        glPushMatrix();
-        {
-            glColor3f(1.0f, 0.0f, 0.0f); // red
-            glRotatef(90 + 180 * i, 1, 0, 0);
-            glTranslatef(0, 0, triangleVertex);
-            drawSpherePart(radius, 10);
-        }
-        glPopMatrix();
+        angle -= 5.0f;
     }
-}
+    void rotateCounterClock()
+    {
+        angle += 5.0f;
+    }
+    void sphereToOcta()
+    {
+        triangleCoord += 0.1;
+        if (triangleCoord > maxTriangleCoord)
+        {
+            triangleCoord = maxTriangleCoord;
+        }
+    }
+    void octaToSphere()
+    {
+        triangleCoord -= 0.1;
+        if (triangleCoord < 0)
+        {
+            triangleCoord = 0;
+        }
+    }
+};
 
+MagicCube mc;
 void DGraphics::display()
 {
     camera->set();
     // Clear all pixels
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glPushMatrix();
-    glRotatef(angleRotationZ, 0, 0, 1);
-    drawPyramids();
-    drawCylinders();
-    drawSpheres();
-    glPopMatrix();
-
+    mc.draw();
     // camera->drawReference();
 
     // glPushMatrix();
@@ -216,53 +205,20 @@ void DGraphics::init()
 
 void DGraphics::keyboard(unsigned char key)
 {
+    camera->keyPress(key);
     switch (key)
     {
-    case '1':
-        camera->rotateLeft();
-        break;
-    case '2':
-        camera->rotateRight();
-        break;
-    case '3':
-        camera->rotateUp();
-        break;
-    case '4':
-        camera->rotateDown();
-        break;
-    case '5':
-        camera->tiltClock();
-        break;
-    case '6':
-        camera->tiltCounterClock();
-        break;
-    case 'w':
-        camera->moveUpRef();
-        break;
-    case 's':
-        camera->moveDownRef();
-        break;
-
     case 'd':
-        angleRotationZ += 5.0f;
+        mc.rotateCounterClock();
         break;
     case 'a':
-        angleRotationZ -= 5.0f;
+        mc.rotateClock();
         break;
-
     case ',':
-        triangleVertex -= 0.1;
-        if (triangleVertex < 0)
-        {
-            triangleVertex = 0;
-        }
+        mc.octaToSphere();
         break;
     case '.':
-        triangleVertex += 0.1;
-        if (triangleVertex > maxTriangleVertex)
-        {
-            triangleVertex = maxTriangleVertex;
-        }
+        mc.sphereToOcta();
         break;
     case 27:
         glutLeaveMainLoop();
@@ -273,45 +229,12 @@ void DGraphics::keyboard(unsigned char key)
 }
 void DGraphics::specialKeyboard(int key)
 {
-    switch (key)
-    {
-    case GLUT_KEY_UP:
-        camera->moveForward();
-        break;
-    case GLUT_KEY_DOWN:
-        camera->moveBackward();
-        break;
-
-    case GLUT_KEY_RIGHT:
-        camera->moveRight();
-        break;
-
-    case GLUT_KEY_LEFT:
-        camera->moveLeft();
-        break;
-
-    case GLUT_KEY_PAGE_UP:
-        camera->moveUp();
-        break;
-    case GLUT_KEY_PAGE_DOWN:
-        camera->moveDown();
-        break;
-
-    default:
-        break;
-    }
+    camera->specialKeyPress(key);
 }
 
 void DGraphics::mouseScroll(int dir)
 {
-    if (dir == 1)
-    {
-        camera->moveForward();
-    }
-    else if (dir == -1)
-    {
-        camera->moveBackward();
-    }
+    camera->mouseScroll(dir);
 }
 int main(int argc, char **argv)
 {

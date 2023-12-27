@@ -30,5 +30,8 @@ public:
     void moveUpRef();
     void moveDownRef();
     void drawReference();
+    void keyPress(unsigned char);
+    void specialKeyPress(int);
+    void mouseScroll(int);
 };
 #endif

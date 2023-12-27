@@ -47,33 +47,9 @@ void DGraphics::init()
 
 void DGraphics::keyboard(unsigned char key)
 {
+    camera->keyPress(key);
     switch (key)
     {
-    case '1':
-        camera->rotateLeft();
-        break;
-    case '2':
-        camera->rotateRight();
-        break;
-    case '3':
-        camera->rotateUp();
-        break;
-    case '4':
-        camera->rotateDown();
-        break;
-    case '5':
-        camera->tiltClock();
-        break;
-    case '6':
-        camera->tiltCounterClock();
-        break;
-    case 'w':
-        camera->moveUpRef();
-        break;
-    case 's':
-        camera->moveDownRef();
-        break;
-
     case 'i':
         if (ball->isManualControl())
         {
@@ -97,7 +73,6 @@ void DGraphics::keyboard(unsigned char key)
     case 'j':
         ball->rotateCounterClock();
         collision_manager->setNearestWall();
-        // cout << "Wall: " << collision_manager->nearest_wall << endl;
         if (!ball->isManualControl())
         {
             collision_manager->init();
@@ -108,7 +83,6 @@ void DGraphics::keyboard(unsigned char key)
     case 'l':
         ball->rotateClock();
         collision_manager->setNearestWall();
-        // cout << "Wall: " << collision_manager->nearest_wall << endl;
         if (!ball->isManualControl())
         {
             collision_manager->init();
@@ -160,45 +134,12 @@ void DGraphics::keyboard(unsigned char key)
 
 void DGraphics::specialKeyboard(int key)
 {
-    switch (key)
-    {
-    case GLUT_KEY_UP:
-        camera->moveForward();
-        break;
-    case GLUT_KEY_DOWN:
-        camera->moveBackward();
-        break;
-
-    case GLUT_KEY_RIGHT:
-        camera->moveRight();
-        break;
-
-    case GLUT_KEY_LEFT:
-        camera->moveLeft();
-        break;
-
-    case GLUT_KEY_PAGE_UP:
-        camera->moveUp();
-        break;
-    case GLUT_KEY_PAGE_DOWN:
-        camera->moveDown();
-        break;
-
-    default:
-        break;
-    }
+    camera->specialKeyPress(key);
 }
 
 void DGraphics::mouseScroll(int dir)
 {
-    if (dir == 1)
-    {
-        camera->moveForward();
-    }
-    else if (dir == -1)
-    {
-        camera->moveBackward();
-    }
+    camera->mouseScroll(dir);
 }
 
 int main(int argc, char **argv)

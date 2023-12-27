@@ -129,3 +129,78 @@ void Camera::drawReference()
     DGraphics::drawAxis();
     glPopMatrix();
 }
+
+void Camera::keyPress(unsigned char key)
+{
+    switch (key)
+    {
+    case '1':
+        this->rotateLeft();
+        break;
+    case '2':
+        this->rotateRight();
+        break;
+    case '3':
+        this->rotateUp();
+        break;
+    case '4':
+        this->rotateDown();
+        break;
+    case '5':
+        this->tiltClock();
+        break;
+    case '6':
+        this->tiltCounterClock();
+        break;
+    case 'w':
+        this->moveUpRef();
+        break;
+    case 's':
+        this->moveDownRef();
+        break;
+
+    default:
+        break;
+    }
+}
+void Camera::specialKeyPress(int key)
+{
+    switch (key)
+    {
+    case GLUT_KEY_UP:
+        this->moveForward();
+        break;
+    case GLUT_KEY_DOWN:
+        this->moveBackward();
+        break;
+
+    case GLUT_KEY_RIGHT:
+        this->moveRight();
+        break;
+
+    case GLUT_KEY_LEFT:
+        this->moveLeft();
+        break;
+
+    case GLUT_KEY_PAGE_UP:
+        this->moveUp();
+        break;
+    case GLUT_KEY_PAGE_DOWN:
+        this->moveDown();
+        break;
+
+    default:
+        break;
+    }
+}
+void Camera::mouseScroll(int dir)
+{
+    if (dir == 1)
+    {
+        this->moveForward();
+    }
+    else if (dir == -1)
+    {
+        this->moveBackward();
+    }
+}
